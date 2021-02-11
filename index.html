@@ -1,3 +1,111 @@
-<script type="text/javascript" src="mono/mono-config.js"></script>
-<script type="text/javascript" src="mono/runtime.js"></script>
-<script type="text/javascript" src="mono/dotnet.js"></script>
+<html>
+	<meta charset="utf-8"/>
+    <title>webcs-term</title>
+	<link href="ui/phosphor-dockpanel-menu.css" rel="stylesheet" type="text/css">
+	<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link href="ui/xterm-4.10.0.css" rel="stylesheet" type="text/css"><!--https://unpkg.com/xterm@4.10.0/css/xterm.css-->
+    <script type="text/javascript" src="ui/xterm-4.10.0.js"></script><!--https://unpkg.com/xterm@4.10.0/lib/xterm.js-->
+    <script type="text/javascript" src="ui/xterm-addon-fit-0.5.0.js"></script><!--https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.js-->
+	<script type="text/javascript" src="ui/phosphor-dockpanel-menu.js"></script><!--https://phosphorjs.github.io/examples/dockpanel/bundle.js + http://phosphorjs.github.io/examples/menus/bundle.js-->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+	<script type="text/javascript" src="ui/ui.js"></script>
+    <script async type="text/javascript" src="mono/dotnet.js"></script>
+    <script async type="text/javascript" src="mono/dotnet-extra.js"></script>
+    <script>
+        document.write("<div id='pageLoadingDiv'>Loading...</div>")
+        require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@latest/min/vs' }});
+        window.MonacoEnvironment = { getWorkerUrl: () => proxy };
+        let proxy = URL.createObjectURL(new Blob([`
+            self.MonacoEnvironment = {
+                baseUrl: 'https://unpkg.com/monaco-editor@latest/min/'
+            };
+            importScripts('https://unpkg.com/monaco-editor@latest/min/vs/base/worker/workerMain.js');
+        `], { type: 'text/javascript' }));
+        require(["vs/editor/editor.main"], function () {
+            // There's a bug which breaks tab focus if monaco isn't loaded prior to the ui. Just wait for monaco...
+            onMonacoReady();
+        });
+        function onMonacoReady() {
+            var config = {
+                vfs_prefix: 'managed',
+                deploy_prefix: 'managed',
+                enable_debugging: 0,
+                file_list: ['mscorlib.dll', 'netstandard.dll', 'System.dll', 'WebAssembly.Bindings.dll', 'hello.exe', 'mcs-host.exe', 'mcs.exe', 'System.Core.dll', 'System.Xml.dll', 'Mono.Security.dll', 'System.Net.Http.dll', 'System.Net.Http.WebAssemblyHttpHandler.dll', 'System.Memory.dll']
+            };
+            var Module = { 
+                onRuntimeInitialized: function () {
+                    MONO.mono_load_runtime_and_bcl (
+                        config.vfs_prefix,
+                        config.deploy_prefix,
+                        config.enable_debugging,
+                        config.file_list,
+                        function () {
+                            onMonoInitialized();
+                        }
+                    )
+                },
+            };
+            function onMonoInitialized() {
+                return;
+                FS.mkdir('/idb');
+                FS.mount(IDBFS, {}, '/idb');
+                FS.syncfs(true, function (err) {
+                    if (err) {
+                        console.log('onMonoInitialized-syncfs error: ' + err);
+                    }
+                    //BINDING.call_static_method("[hello] Program:Main", []);
+                    BINDING.call_static_method("[mcs-host] Program:Main", []);
+                    setTimeout(function(){
+                        console.log('going...');
+                        BINDING.call_static_method("[mcs-host] Program:Main", []);
+                    },3000);
+                    //BINDING.call_static_method("[mcs] Mono.CSharp.Driver:Main", [[]]);
+                });
+            }
+        }
+    </script>
+    <noscript>JavaScript must be enabled to use this website.</br></br>To learn what it's about see <a href="https://github.com/pixeltris/webcs-tui ">https://github.com/pixeltris/webcs-tui</a>.</script>
+</html>
+<!-- 
+ - dockpanel was taken from https://phosphorjs.github.io/examples/dockpanel/bundle.js on 3rd December 2020
+ - menus was taken from http://phosphorjs.github.io/examples/menus/bundle.js on 3rd December 2020
+ - Tweaks to dockpanel:
+   - Removed CodeMirrorWidget
+   - useAltTextOnTabs (adds an alt tooltip when hovering tabs)
+   - contextMenuCloserToMouse (moves context menu closer to mouse y coord if overlapping window height (rather than moving upwards entire height of context menu))
+   - useTooltipOnTabs (adds a tooltip when hovering tabs)
+   - window.dockInstance (to get the docking in global scope (for better or worse))
+   - added TabBar._evtContextMenu event / item onContextMenu function so that we can right click dock tabs. also "ctrl + left click" activates this
+   - moved TabBar._evtMouseDown "event.preventDefault()" after close btn check so we don't consume css :after
+   - added item onFocus function and p-mod-current-active to denote which tab content is focused (invoked from currentItem setter)
+   - added TabBar._getDockInstance/_updateFocusedTab
+   - added DockPanel.onTabBarUpdated/onContextMenu
+   - added DockPanel.splittingWidget / change insertSplit->insertSplitImpl
+   - changed MenuItemPrivate initFrom to use Object.assign
+   - TabBar._evtMouseDown changed to allow right mouse button to focus the tab
+-->
+<!-- Terminal emulators:
+- jQuery Terminal Emulator - https://github.com/jcubic/jquery.terminal / https://terminal.jcubic.pl/
+- term.js - https://github.com/chjj/term.js
+- jor1k terminal.js - https://github.com/s-macke/jor1k/blob/master/js/master/dev/terminal.js
+- xterm.js - https://github.com/xtermjs/xterm.js (term.js fork?)
+- jslinux term.js - https://bellard.org/jslinux/term.js
+- termlib.js - https://www.masswerk.at/termlib/index.html / https://www.masswerk.at/termlib/termlib.js / https://github.com/unilogue/termlib
+--------------------------------------------------------------------------
+-- The following are a bit more than bare bone terminal emulators
+--------------------------------------------------------------------------
+- hyper - https://github.com/vercel/hyper
+- upterm - https://github.com/railsware/upterm
+- GateOne - https://github.com/liftoff/GateOne
+- tty.js - https://github.com/chjj/tty.js
+--------------------------------------------------------------------------
+-- xterm.js seems the best for us (mouse support / least buggy)
+--------------------------------------------------------------------------
+-->
+<!-- Charts:
+Highcharts - used these some years ago, really nice charts (commercial licensing)
+Google Charts - can't host locally
+Chart.js - 51.2kb (compressed) - 169kb (uncompressed)
+uPlot - 17.0kb (compressed) - 38kb (uncompressed)
+chartist-js - 10kb
+-->

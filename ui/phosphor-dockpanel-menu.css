@@ -1,0 +1,737 @@
+.p-Widget {
+	box-sizing: border-box;
+	position: relative;
+	overflow: hidden;
+	cursor: default;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.p-Widget.p-mod-hidden {
+	display: none;
+}
+
+
+
+
+
+
+.p-TabBar {
+	display: flex;
+	flex-direction: column;
+}
+
+.p-TabBar-header {
+	flex: 0 0 auto;
+	display: none;
+}
+
+.p-TabBar-footer {
+	flex: 0 0 1px;
+	background: #C0C0C0;
+}
+
+.p-TabBar-body {
+	display: flex;
+	flex-direction: row;
+	flex: 1 1 auto;
+}
+
+.p-TabBar-content {
+	display: flex;
+	flex-direction: row;
+	flex: 1 1 auto;
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	min-width: 0;
+	align-items: flex-end;
+}
+
+.p-TabBar-tab {
+	display: flex;
+	flex-direction: row;
+	box-sizing: border-box;
+	overflow: hidden;
+	
+	/*flax is used to create a common default tab size.
+	We don't really want this as it adds bloat.
+	One good thing about is that no text can be larger than this size.
+	We therefore need to set a maximum width if not using flex (and if we wan't a max width)*/
+	/*flex: 0 1 125px;*/
+	max-width:160px;/* NOTE: We should combine this with a "text-overflow: ellipsis;" on the "p-TabBar-tabText" class */
+	
+	min-height: 20px;
+	max-height: 20px;
+	min-width: 35px;
+	margin-left: -1px;
+	border: 1px solid #C0C0C0;
+	border-bottom: none;
+	padding-left:7px;
+	padding-right:4px;
+	background: #E5E5E5;
+	font: 12px Helvetica, Arial, sans-serif;
+}
+
+.p-TabBar-tab:first-child {
+	margin-left: 0;
+}
+
+.p-TabBar-tab.p-mod-current {
+	min-height: 23px;
+	max-height: 23px;
+	background: white;
+	transform: translateY(1px);
+}
+
+/* This means the teb content is focused */
+.p-TabBar-tab.p-mod-current-focused {
+    font-weight: bold;
+}
+
+.p-TabBar-tab:hover:not(.p-mod-current) {
+	background: #F0F0F0;
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon {
+	margin-left: 4px;
+	margin-top: 3px;
+	height:12px;
+	width:12px;
+	background-color:#d0d0d0;
+	border: 1px solid #bbbbbb;
+	border-radius:2px;
+	text-align:center;
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:hover {
+	background-color:#b9b9b9;
+	border: 1px solid #949494;
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:active {
+	background-color:#868686;
+	border: 1px solid #606060;
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:before {
+	margin-top:-4px;
+	display:block;
+	align-content:center;
+	/*content: '\F00D';*/
+	font-family: FontAwesome;
+	color:#777;
+	/*content: '\274C';
+	font-size:8px;*/
+	content: '\2716';
+	font-size:8px;
+}
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:active:before {
+	color:#444;
+}
+
+.p-TabBar-tab.p-mod-drag-image {
+	min-height: 23px;
+	max-height: 23px;
+	min-width: 125px;
+	border: none;
+	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+	transform: translateX(-40%) translateY(-58%);
+}
+
+.p-TabBar-tabIcon,
+.p-TabBar-tabCloseIcon {
+	flex: 0 0 auto;
+}
+
+.p-TabBar-tabText {
+	flex: 1 1 auto;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.p-TabBar.p-mod-dragging .p-TabBar-tab {
+	position: relative;
+	left: 0;
+	transition: left 150ms ease;
+	/* keep in sync with JS */
+}
+
+.p-TabBar.p-mod-dragging .p-TabBar-tab.p-mod-dragging {
+	transition: none;
+}
+
+.p-TabPanel-tabBar {
+	z-index: 1;
+}
+
+.p-TabPanel-stackedPanel {
+	z-index: 0;
+}
+
+.p-TabBar {
+	min-height: 24px;
+	max-height: 24px;
+}
+
+.p-TabBar-tabIcon,
+.p-TabBar-tabText,
+.p-TabBar-tabCloseIcon {
+	line-height: 20px;
+}
+
+.p-TabBar-tabText {
+	text-overflow: ellipsis;/* Add a '...' if our text gets trucated */
+}
+
+
+
+
+
+
+
+.p-DockPanel {
+	position: relative;
+	z-index: 0;
+}
+
+.p-DockPanel>.p-Widget {
+	position: absolute;
+	z-index: 0;
+}
+
+.p-DockPanel-overlay {
+	box-sizing: border-box;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.p-TabBar-tab.p-mod-hidden,
+.p-DockPanel-overlay.p-mod-hidden {
+	display: none;
+}
+
+
+
+
+
+.p-SplitPanel {
+	z-index: 0;
+}
+
+.p-SplitPanel-child {
+	z-index: 0;
+}
+
+.p-SplitPanel-handle {
+	z-index: 1;
+}
+
+.p-SplitPanel-handle.p-mod-hidden {
+	display: none;
+}
+
+.p-SplitPanel-handle:after {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	content: '';
+}
+
+.p-SplitPanel.p-mod-horizontal>.p-SplitPanel-handle {
+	cursor: ew-resize;
+}
+
+.p-SplitPanel.p-mod-vertical>.p-SplitPanel-handle {
+	cursor: ns-resize;
+}
+
+.p-SplitPanel.p-mod-horizontal>.p-SplitPanel-handle:after {
+	left: 50%;
+	min-width: 7px;
+	transform: translateX(-50%);
+}
+
+.p-SplitPanel.p-mod-vertical>.p-SplitPanel-handle:after {
+	top: 50%;
+	min-height: 7px;
+	transform: translateY(-50%);
+}
+
+
+
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #F5F6F7;
+	overflow:hidden;
+	height:100%;
+	text-rendering: optimizeLegibility;
+	font-family: Helvetica, Arial, sans-serif;
+}
+
+body.p-mod-override-cursor * {
+	cursor: inherit !important;
+}
+
+:root {
+	--header-size:0px;
+	--footer-size:0px;
+	--docking-window-border-padding:0px;
+	--docking-panel-border-padding:0px;
+    /* Also see DockPanelPrivate.spacingProperty (spacing between panels) */
+}
+
+#main {
+	position: absolute;
+	top: calc(var(--docking-window-border-padding) + var(--header-size));
+	left: var(--docking-window-border-padding);
+	right: var(--docking-window-border-padding);
+	bottom: calc(var(--docking-window-border-padding) + var(--footer-size));
+}
+
+#main-header {
+}
+#main-footer {
+}
+
+.content {
+	border: 1px solid black;
+	min-width: 50px;
+	min-height: 50px;
+}
+
+.red {
+	background: #E74C3C;
+}
+
+.yellow {
+	background: #F1C40F;
+}
+
+.green {
+	background: #27AE60;
+}
+
+.blue {
+	background: #3498DB;
+}
+
+.p-DockTabPanel {
+	padding-right: 2px;
+	padding-bottom: 2px;
+}
+
+.p-DockTabPanel>.p-StackedPanel {
+	padding: var(--docking-panel-border-padding);
+	background: white;
+	border: 1px solid #C0C0C0;
+	border-top: none;
+	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.p-DockPanel-overlay {
+	background: rgba(255, 255, 255, 0.6);
+	border: 1px dashed black;
+}
+
+.p-DockPanel-overlay.p-mod-root-top,
+.p-DockPanel-overlay.p-mod-root-left,
+.p-DockPanel-overlay.p-mod-root-right,
+.p-DockPanel-overlay.p-mod-root-bottom,
+.p-DockPanel-overlay.p-mod-root-center {
+	border-width: 2px;
+}
+
+
+
+
+
+
+
+
+.p-Tooltip {
+	position:absolute;
+	/*margin-right:20px;*/
+	z-index:9999;
+	font-size:12px;
+	color:#555;
+	border:1px solid #555;
+	border-radius:3px;
+	box-shadow:2px 2px 1px rgba(0, 0, 0, 0.2);
+	padding:4px;
+	width:auto;
+	word-wrap:break-word;
+	overflow-wrap:anywhere;
+	background-image:linear-gradient(#FFFFFF,#E4E5F2);
+	user-select:none;
+	pointer-events:none;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.p-TabPanel>.p-StackedPanel {
+	background: white;
+	border: 1px solid #C0C0C0;
+	border-top: none;
+}
+
+.p-MenuBar {
+	padding-left: 5px;
+	background: #FEFEFE;
+	color: rgba(0, 0, 0, 0.87);
+	border-bottom: 1px solid #DDDDDD;
+	font: 13px Helvetica, Arial, sans-serif;
+}
+
+.p-MenuBar-content {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: row;
+	list-style-type: none;
+}
+
+.p-MenuBar-item.p-mod-hidden {
+	display: none;
+}
+
+.p-MenuBar-menu {
+	transform: translateY(-1px);
+}
+
+.p-MenuBar-item {
+	padding: 4px 8px;
+	border-left: 1px solid transparent;
+	border-right: 1px solid transparent;
+	box-sizing: border-box;
+}
+
+.p-MenuBar-item.p-mod-active {
+	background: #E5E5E5;
+}
+
+.p-MenuBar-item.p-mod-disabled {
+	color: rgba(0, 0, 0, 0.26);
+}
+
+.p-MenuBar-item.p-mod-separator-type {
+	margin: 2px;
+	padding: 0;
+	border: none;
+	border-left: 1px solid #DDDDDD;
+}
+
+.p-MenuBar.p-mod-active .p-MenuBar-item.p-mod-active {
+	z-index: 1000000;
+	background: white;
+	border-left: 1px solid #C0C0C0;
+	border-right: 1px solid #C0C0C0;
+	box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+}
+
+.p-Menu {
+	z-index: 10000;
+	padding: 3px 0px;
+	background: white;
+	color: rgba(0, 0, 0, 0.87);
+	border: 1px solid #C0C0C0;
+	font: 12px Helvetica, Arial, sans-serif;
+	box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.2);
+	position: absolute;
+	white-space: nowrap;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.p-Menu-content {
+	margin: 0;
+	padding: 0;
+	display: table;
+	list-style-type: none;
+}
+
+.p-Menu-item.p-mod-hidden {
+	display: none;
+}
+
+.p-Menu-itemIcon,
+.p-Menu-itemSubmenuIcon {
+	display: table-cell;
+	text-align: center;
+}
+
+.p-Menu-item {
+	display: table-row;
+}
+
+.p-Menu-item.p-mod-active {
+	background: #E5E5E5;
+}
+
+.p-Menu-item.p-mod-disabled {
+	color: rgba(0, 0, 0, 0.26);
+}
+
+.p-Menu-item.p-type-separator>span {
+	padding: 0;
+	height: 9px;
+}
+
+.p-Menu-item.p-type-separator>span::after {
+	content: '';
+	display: block;
+	position: relative;
+	top: 4px;
+	border-top: 1px solid #DDDDDD;
+}
+
+.p-Menu-item.p-type-check.p-mod-checked>.p-Menu-itemIcon::before {
+	content: '\F00C';
+}
+
+.p-Menu-item.p-type-submenu>.p-Menu-itemSubmenuIcon::before {
+	content: '\F0DA';
+}
+
+.p-Menu-itemIcon {
+	width: 21px;
+	padding: 4px 2px;
+}
+
+.p-Menu-itemText {
+	padding: 4px 35px 4px 2px;
+	display: table-cell;
+	text-align: left;
+}
+
+.p-Menu-itemShortcut {
+	padding: 4px 0px;
+	display: table-cell;
+	text-align: right;
+}
+
+.p-Menu-itemSubmenuIcon {
+	width: 16px;
+	padding: 4px 0px;
+}
+
+.p-Menu-itemIcon::before,
+.p-Menu-itemSubmenuIcon::before {
+	font-family: FontAwesome;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.infinite-tree {
+	font-size:12px;
+	/*font-family:monospace;*/
+}
+.infinite-tree-scroll {
+  overflow: auto;
+  /*max-height: 400px; /* Change the height to suit your needs. */
+}
+.infinite-tree-table {
+  width: 100%;
+}
+.infinite-tree-content {
+  outline: 0;
+  position: relative;
+  height: 100%;
+}
+.infinite-tree-content .infinite-tree-selected.infinite-tree-item,
+.infinite-tree-content .infinite-tree-selected.infinite-tree-item:hover {
+  background: #deecfd;
+  border: 1px solid #06c;
+}
+.infinite-tree-content .infinite-tree-item {
+  border: 1px solid transparent;
+  cursor: default;
+}
+.infinite-tree-content .infinite-tree-item:hover {
+  background: #f2fdff;
+}
+.infinite-tree-content .infinite-tree-item:disabled,
+.infinite-tree-content .infinite-tree-item[disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.infinite-tree-content .infinite-tree-node {
+  position: relative;
+}
+.infinite-tree-content .infinite-tree-toggler {
+  color: #666;
+  user-select: none;
+}
+.infinite-tree-content .infinite-tree-toggler:hover {
+  color: #333;
+  text-decoration: none;
+}
+.infinite-tree-content .infinite-tree-title {
+  cursor: pointer;
+  user-select: none;
+}
+.infinite-tree-title-folder-open:before {
+	content: '\F07C';
+	font-family: FontAwesome;
+	padding-right:0.8px;
+	color:#444;
+}
+.infinite-tree-title-folder-close:before {
+	content: '\F07B';
+	font-family: FontAwesome;
+	padding-right:3px;
+	color:#444;
+}
+.infinite-tree-title-file:before {
+	content: '\F15B';
+	font-family: FontAwesome;
+	padding-right:3px;
+	color:#444;
+}
+.infinite-tree-no-data {
+  text-align: center;
+}
+
+
+
+
+.mono-box {
+	height:100%;
+	font-family: "Courier New", Courier, "Lucida Sans Typewriter", "Lucida Typewriter", monospace;
+	font-size:11px;
+	outline: 0;
+	overflow: hidden;
+}
+.mono-box-canvas {
+	width: 100%;
+	height: 100%;
+}
+.mono-box-row {
+	height:20px;
+}
+.mono-box-column {
+	height:20px;
+}
+
+.infinite-scroll {
+	position:absolute;
+	z-index:1;
+	background-color:#f1f1f1;
+}
+.infinite-scroll.vertical {
+	height:100%;
+	top:0;
+	right:0;
+}
+.infinite-scroll.horizontal {
+	width:100%;
+	bottom:0;
+}
+.infinite-scroll.nub {
+	bottom:0;
+	right:0;
+	background-color:#dcdcdc;
+}
+.infinite-scroll-arrow {
+	font-family: FontAwesome;
+	text-align:center;
+	font-size:12px;
+	position:absolute;
+	color:#505050;
+}
+.infinite-scroll-arrow-disabled {
+	pointer-events: none;
+	color:#aaa;
+}
+.infinite-scroll-arrow:hover {
+	background-color:#ccc;
+}
+.infinite-scroll-arrow:active {
+	background-color:#666;
+	color:#ddd;
+}
+.infinite-scroll-arrow.up {
+	top:0;
+	width:100%;
+}
+.infinite-scroll-arrow.down {
+	bottom:0;
+	width:100%;
+}
+.infinite-scroll-arrow.left {
+	left:0;
+	height:100%;
+}
+.infinite-scroll-arrow.right {
+	right:0;
+	height:100%;
+}
+.infinite-scroll-arrow.up:after {
+	content:'\f0d8';
+	position:absolute;
+	left:0;
+	right:0;
+	top:1px;
+}
+.infinite-scroll-arrow.down:after {
+	content:'\f0d7';
+	position:absolute;
+	left:0;
+	right:0;
+	bottom:1px;
+}
+.infinite-scroll-arrow.left:after {
+	content:'\f0d9';
+	position:absolute;
+	left:5px;
+	top:2px;
+}
+.infinite-scroll-arrow.right:after {
+	content:'\f0da';
+	position:absolute;
+	right:5px;
+	top:2px;
+}
+.infinite-scroll-thumb {
+	position:absolute;
+	width:100%;
+	background-color:#c1c1c1;
+}
+.infinite-scroll-thumb.disabled {
+}
+.infinite-scroll-thumb:hover {
+}
+.infinite-scroll-thumb:active {
+}
