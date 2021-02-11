@@ -18,10 +18,6 @@ Web util for building and running .NET / C# text-based programs ([CLI](https://w
 - [Terminal.Gui](https://github.com/migueldeicaza/gui.cs) is useful for building text-based user interfaces with C#.
 - For self-hosting see [hosting](/hosting/README.md) (lt;dr any static web server should work).
 
-## Self hosting / running locally
-- All content is statically delivered, so any hosting software should work. There's a very simple web server under `hosting/svr.cs`.
-- NOTE: Some form of a server is required as wasm wont load from a `file://` url.
-
 ## TODO
 - [X] Context menu clicking body, allow terminals to be created when nothing else is there
 - [X] Context menu for tabs (copy file path, save, etc)
