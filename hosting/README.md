@@ -4,5 +4,5 @@ There are a couple of optional non-static features which provide additional func
 
 Additionally there's a simple web server `svr.cs` for hosting on localhost (if you don't have your own at hand).
 
-##svr.cs
+## svr.cs
 A simple web server which gives the web browser whatever it asks for.
