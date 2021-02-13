@@ -1,8 +1,9 @@
-**All content is statically delivered, so you generally shouldn't need to use anything here.** *However, some form of a server is required as wasm wont load from a `file://` url.*
+**Content is statically delivered, so you generally don't need to use anything listed here.**
 
-There are a couple of optional non-static features which provide additional functionality (remote file storage, remote access, etc) (TODO).
+*Some form of a server is required as wasm wont load from a `file://` url.*
 
-Additionally there's a simple web server `svr.cs` for hosting on localhost (if you don't have your own at hand).
-
-## svr.cs
+## svr.cs (svr.exe)
 A simple web server which gives the web browser whatever it asks for.
+
+## mgr.cs (mgr.exe)
+Provides additional functionality (remote file storage, remote access, etc) (TODO).

@@ -1,33 +1,34 @@
-Web util for building and running .NET / C# text-based programs ([CLI](https://wikipedia.org/wiki/Command-line_interface) / [TUI](https://wikipedia.org/wiki/Text-based_user_interface))
+Fully client sided web tool for coding and running .NET / C# programs.
 
 ## Features
 - Run .NET assemblies.
 - Compile C# code with `msc` or `roslyn`.
 - Virtual file system with persistance, allowing you to come back to your code / compiled assemblies.
-- [Terminals](https://wikipedia.org/wiki/Terminal_emulator) for interacting with built programs, and a docking UI for multiple programs to run at the same time.
+- Terminals for interacting with `Console` programs, and a docking UI for multiple programs to run at the same time.
+- WinForms implementaion (extremely basic / stripped down).
 
 ## How does it work?
 - A WebAssembly build of Mono is used to run .NET assemblies (Blazor *isn't* used here as it doesn't provide any benefit on top of Mono for this scenario).
-- Each tab is an AppDomain which allows seperate `System.Console` interactions.
-- `xterm.js` provides the terminals, `Monaco` provides the code editor, `PhosphorJS` provides the docking, `Marked` provides a markdown previewer.
+- `xterm.js` (terminals), `Monaco` (code editor), `PhosphorJS` (docking/menus), `markdown-it` (markdown), `awesome-notifications` (notifications).
 
 ## Notes / resources / help
-- *This project is mostly suited for small text-based programs. If you want something more try [Blazor](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor) or [Uno Platform](https://github.com/unoplatform/uno).*
-- [IndexedDB](https://developer.mozilla.org/docs/Web/API/IndexedDB_API) (mounted to /idb/) is used for storage. It should be fairly large, but if you're low on disk space (or creating very large files) you may lose data.
-- A list of built-in commands can be found [here](TODO) - md(markdown),edit(monaco),mcs(mcs),csc(csc/roslyn),roslyn(explicit roslyn),ls,dir,cd,pwd,mkdir,cp,clear,cls
+- *This project is suited for simple programs. If you want to use C#/.NET in a web browser and want something more try [Blazor](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor), [Uno Platform](https://github.com/unoplatform/uno), or [Bridge.NET](https://github.com/bridgedotnet/Bridge).
+- *Don't use this project for "real" coding. If you want to code in a web browser use https://github.com/cdr/code-server or https://github.com/eclipse-theia/theia.*
+- IndexedDB (mounted to `/idb/`) is used for storage. It should be fairly large, but if you're low on disk space (or creating very large files) you may lose data.
+- A list of built-in terminal commands can be found [here](TODO) - md(markdown),edit(monaco),mcs(mcs),csc(csc/roslyn),roslyn(explicit roslyn),ls,dir,cd,pwd,mkdir,cp,clear,cls
 - [Terminal.Gui](https://github.com/migueldeicaza/gui.cs) is useful for building text-based user interfaces with C#.
-- For self-hosting see [hosting](/hosting/README.md) (lt;dr any static web server should work).
+- [Self-hosting](/hosting/README.md) **lt;dr use any static web server**.
 
 ## TODO
 - [X] Context menu clicking body, allow terminals to be created when nothing else is there
 - [X] Context menu for tabs (copy file path, save, etc)
 - [X] Fix monaco tab focus
-- [ ] Mardown ui (showdownjs?)
+- [X] Mardown ui
+- [/] Color scheming - TODO: Finish this (add xterm light theme, add dark context menus, add dark docking, add dark scroll bars (xterm / markdown))
 - [ ] Hook up console
 - [ ] Appdomains
 - [ ] Dropdown list when there's too many tabs (VisualStudio-like)
 - [ ] Look at - mcs (compiler), Roslyn (compiler)
-- [ ] Color scheming
 - [ ] Debugger? This will probably never happen...
 - [ ] Smaller builds
 - [ ] DotNetAnywhere
@@ -39,7 +40,14 @@ Web util for building and running .NET / C# text-based programs ([CLI](https://w
 - [ ] ctrl+b to open the base terminal?
 - [ ] Add ability to hide tabs (essentially create header/footers). This will require extra menu items to show them again.
 - [ ] Websockets / remote file storage. Also maybe hook up the virtual file system so a locally hosted SMB server can use it?
+- [ ] x-spreadsheets/ag-grid/reactgrid? chart.js?
+- [ ] https://github.com/f3oall/awesome-notifications
+- [ ] Simple WinForms implementaion
+- [ ] WinForm web GUI designer? Very complex, unlikely to ever happen.
 
 ## Related
-- https://github.com/nbarkhina/CSharp-In-Browser/tree/master
+- https://github.com/nbarkhina/CSharp-In-Browser
 - https://github.com/Suchiman/Runny
+- https://github.com/unoplatform/uno
+- https://github.com/bridgedotnet/Bridge
+- https://github.com/roozbehid/WasmWinforms

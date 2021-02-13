@@ -1,16 +1,25 @@
 <html>
 	<meta charset="utf-8"/>
-    <title>webcs-term</title>
+    <title>webcs-tools</title>
+    <!--TODO: integrity on this project is somewhat important, add integrity to script tabs and fetch requests (dlls, etc)-->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 	<link href="ui/phosphor-dockpanel-menu.css" rel="stylesheet" type="text/css">
-	<link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-    <link href="ui/xterm-4.10.0.css" rel="stylesheet" type="text/css"><!--https://unpkg.com/xterm@4.10.0/css/xterm.css-->
-    <script type="text/javascript" src="ui/xterm-4.10.0.js"></script><!--https://unpkg.com/xterm@4.10.0/lib/xterm.js-->
+    <link href="" rel="stylesheet" type="text/css", id="markdown-theme"><!--Assigned when setting theme-->
+    <link href="ui/xterm-4.10.0.css" rel="stylesheet" type="text/css"><!--https://cdn.jsdelivr.net/npm/xterm@4.10.0/css/xterm.css-->
+    <script type="text/javascript" src="ui/xterm-4.10.0.js"></script><!--https://cdn.jsdelivr.net/npm/xterm@4.10.0/lib/xterm.min.js-->
     <script type="text/javascript" src="ui/xterm-addon-fit-0.5.0.js"></script><!--https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.js-->
-	<script type="text/javascript" src="ui/phosphor-dockpanel-menu.js"></script><!--https://phosphorjs.github.io/examples/dockpanel/bundle.js + http://phosphorjs.github.io/examples/menus/bundle.js-->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <script type="text/javascript" src="ui/markdown-it-12.0.4.min.js"></script><!--https://cdn.jsdelivr.net/npm/markdown-it@12.0.4/dist/markdown-it.min.js-->
+    <script type="text/javascript" src="ui/require-2.3.6.min.js"></script><!--https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js-->
+    <script type="text/javascript" src="ui/phosphor-dockpanel-menu.js"></script><!--https://phosphorjs.github.io/examples/dockpanel/bundle.js + http://phosphorjs.github.io/examples/menus/bundle.js-->
+    <script type="text/javascript" src="ui/ui-theme.js"></script>
 	<script type="text/javascript" src="ui/ui.js"></script>
     <script async type="text/javascript" src="mono/dotnet.js"></script>
     <script async type="text/javascript" src="mono/dotnet-extra.js"></script>
+    <script>
+        var markdownThemesUrls = [];
+        markdownThemesUrls['dark'] = 'ui/github-markdown-dark.css';<!--(fetched 11th feb 2021) https://mrdrivingduck.cn/github-markdown-css/github-markdown-dark.css-->
+        markdownThemesUrls['light'] = 'ui/github-markdown-light-4.0.0.min.css';<!--https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css-->
+    </script>
     <script>
         document.write("<div id='pageLoadingDiv'>Loading...</div>")
         require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@latest/min/vs' }});
@@ -64,7 +73,7 @@
             }
         }
     </script>
-    <noscript>JavaScript must be enabled to use this website.</br></br>To learn what it's about see <a href="https://github.com/pixeltris/webcs-tui ">https://github.com/pixeltris/webcs-tui</a>.</script>
+    <noscript>JavaScript must be enabled to use this website.</br></br>See <a href="https://github.com/pixeltris/webcs-tools">https://github.com/pixeltris/webcs-tools</a>.</script>
 </html>
 <!-- 
  - dockpanel was taken from https://phosphorjs.github.io/examples/dockpanel/bundle.js on 3rd December 2020

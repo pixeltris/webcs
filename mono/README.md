@@ -3,7 +3,6 @@
 - Copy `builds/release/dotnet.wasm`, `builds/release/dotnet.js`
 - Comment out the following in dotnet.js (conflict with PhosphorJS) `ENVIRONMENT_IS_NODE=typeof process==="object"&&typeof process.versions==="object"&&typeof process.versions.node==="string";`
 - Copy required assemblies from `wasm-bcl/wasm` to `managed` (see below for list of minimum required assemblies)
-- Copy additional assemblies from `wasm-bcl/wasm` to `managed-lod` (these load on demand)
 - To update `mcs.exe` see `mcs-host.cs`
 
 ## Minimum required assemblies (for "Hello world")
@@ -15,8 +14,8 @@
 ## dotnet-extra.js
 - mono is built using Emscripten without an IndexedDB mount point. dotnet-extra.js adds this in (mounts to `/idb`). Updates to this generally shouldn't be required.
 
-## bin
+## /amanaged/bin
 - Anything in this folder will be treated as a command line program. This is where you should put your versions of tools such as `ls`, `cd`, `pwd`, etc.
 
-## sdk
+## /managed/sdk
 - sdk / gac, put all assemblies here for referenceing (see `wasm-bcl/wasm`)

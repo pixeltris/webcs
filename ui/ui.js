@@ -4,9 +4,10 @@ var useTooltipOnTabs = true;
 var gTooltip = null;
 var dockInstance = null;
 var recentTabs = [];
+var activeThemeName = null;
 var baseDocumentTitle = document.title;
 
-const TabType_Default = 1;// Empty (add custom content yourself)
+const TabType_CustomContent = 1;// Empty (add custom content yourself)
 const TabType_Terminal = 2;
 const TabType_TextEditor = 3;
 const TabType_MarkdownViewer = 4;
@@ -197,14 +198,12 @@ function createXTerm(widget) {
     var fitAddon = new FitAddon.FitAddon();
     var term = new Terminal({
         fontSize:12,
-        //rendererType: 'dom',
-        theme: {
-            background: '#1e1e1e'
-        }
+        //rendererType: 'dom'
     });
+    widget.terminal = term;
+    setThemeXTerm(widget);
     term.loadAddon(fitAddon);
     term.open(widget.node);
-    widget.terminal = term;
     widget.onResize = function(msg) {
         fitAddon.fit();
     };
@@ -247,7 +246,8 @@ function createXTerm(widget) {
     //widget.node.style.backgroundColor = "#000";
 }
 
-function createDefaultContent(widget) {
+function createCustomContent(widget) {
+    setThemeCustomContent(widget);
     widget.node.onmousedown = function(event) {
         onFocusWidget(dockInstance.layout, widget);
     };
@@ -259,27 +259,38 @@ function createDefaultContent(widget) {
     };
 }
 
+function createMarkdownViewer(widget) {
+    var md = window.markdownit();
+    var result = md.render(`hello  
+# markdown-it rulezz!
+This is a test  
+*Italic*  
+**Bold**  
+- __[pica](https://nodeca.github.io/pica/demo/)__ - high quality and fast image`);
+    widget.node.innerHTML = result;
+    widget.addClass('markdown-body');
+    setThemeMarkdown(widget);
+}
+
 function createContent(title, tabType, description) {
     if (!tabType) {
-        tabType = TabType_Default;
+        tabType = TabType_CustomContent;
     }
     var widget = new libUI.Widget();
     widget.addClass('content');
-    //widget.addClass(title.toLowerCase());
     widget.lastFocusTime = Date.now();
     widget.title.text = title;
 	widget.title.description = description;
     widget.title.closable = true;
 	widget.tabType = tabType;
     widget.tabTag = null;
-	widget.node.style.backgroundColor = "#FFFBF0";
 	//widget.node.style.overflow = 'auto';
     widget.onContextMenu = function(event) {
         openMainContextMenu(event, widget);
     };
 	switch (tabType) {
-        case TabType_Default:
-            createDefaultContent(widget);
+        case TabType_CustomContent:
+            createCustomContent(widget);
             break;
 		case TabType_Terminal:
 			createXTerm(widget);
@@ -287,10 +298,10 @@ function createContent(title, tabType, description) {
 		case TabType_TextEditor:
             createTextEditor(widget);
 			break;
+        case TabType_MarkdownViewer:
+            createMarkdownViewer(widget);
+            break;
 	}
-    widget.node.onfocus = function() {
-        console.log('hi ' + title);
-    }
     return widget;
 }
 
@@ -513,7 +524,66 @@ function openMainContextMenu(event, tabRef) {
 // END MenuItem handlers
 ///////////////////////////////////////////////////////
 
+function setThemeShared(widget) {
+    if (widget) {
+        widget.node.style.backgroundColor = sharedThemes[themeThemes[activeThemeName].shared].widgetBackground;
+    } else {
+        // Put any common theme changes here
+    }
+}
+
+function setThemeCustomContent(widget) {
+    setThemeShared(widget);
+}
+
+function setThemeMarkdown(widget) {
+    setThemeShared(widget);
+    widget.node.style.backgroundColor = markdownThemes[themeThemes[activeThemeName].markdown].background;
+    widget.node.style.padding = '10px';
+    widget.node.style.userSelect = 'text';
+    widget.node.style.cursor = 'auto';
+}
+
+function setThemeXTerm(widget) {
+    setThemeShared(widget);
+    if (widget.terminal != null) {
+        widget.terminal.setOption('theme', xtermThemes[themeThemes[activeThemeName].xterm]);
+    }
+}
+
+function setTheme(themeName) {
+    var theme = themeThemes[themeName];
+    if (!theme) {
+        console.log('Invalid theme "' + themeName + '"');
+        return;
+    }
+    if (theme) {
+        activeThemeName = themeName;
+        document.getElementById('markdown-theme').setAttribute('href', markdownThemesUrls[theme.markdown]);
+        setThemeShared();
+        if (dockInstance == null) {
+            return;
+        }
+        var widgets = getWidgets(dockInstance.layout);
+        for (var i = 0; i < widgets.length; i++) {
+            var widget = widgets[i];
+            switch (widget.tabType) {
+                case TabType_CustomContent:
+                    setThemeCustomContent(widget);
+                    break;
+                case TabType_Terminal:
+                    setThemeXTerm(widget);
+                    break;
+                case TabType_MarkdownViewer:
+                    setThemeMarkdown(widget);
+                    break;
+            }
+        }
+    }
+}
+
 function main() {
+    setTheme('light');
     document.getElementById('pageLoadingDiv').remove();
     document.body.onkeydown = function(event) {
         // Prevent unintuitive key presses on body focus (such as tab)
@@ -533,8 +603,8 @@ function main() {
     var r3 = createContent('Red', TabType_Terminal);
     var b1 = createContent('Blue', TabType_Terminal);
     var b2 = createContent('Blue', TabType_Terminal);
-    var g1 = createContent('GreenGreen', TabType_Default, 'GreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreen');
-    var g2 = createContent('Green');
+    var g1 = createContent('GreenGreen', TabType_CustomContent, 'GreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreen');
+    var g2 = createContent('Green', TabType_MarkdownViewer);
     var g3 = createContent('Green');
     var y1 = createContent('Hex', '');
     var y2 = createContent('Yellow');

@@ -56,9 +56,9 @@
 	box-sizing: border-box;
 	overflow: hidden;
 	
-	/*flax is used to create a common default tab size.
+	/*flex is used to create a common default tab size.
 	We don't really want this as it adds bloat.
-	One good thing about is that no text can be larger than this size.
+	One good thing about it is that no text can be larger than this size.
 	We therefore need to set a maximum width if not using flex (and if we wan't a max width)*/
 	/*flex: 0 1 125px;*/
 	max-width:160px;/* NOTE: We should combine this with a "text-overflow: ellipsis;" on the "p-TabBar-tabText" class */
