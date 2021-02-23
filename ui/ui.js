@@ -1,3 +1,21 @@
+/*
+- dockpanel was taken from https://phosphorjs.github.io/examples/dockpanel/bundle.js on 3rd December 2020
+- menus was taken from http://phosphorjs.github.io/examples/menus/bundle.js on 3rd December 2020
+- Tweaks to dockpanel:
+  - Removed CodeMirrorWidget
+  - useAltTextOnTabs (adds an alt tooltip when hovering tabs)
+  - contextMenuCloserToMouse (moves context menu closer to mouse y coord if overlapping window height (rather than moving upwards entire height of context menu))
+  - useTooltipOnTabs (adds a tooltip when hovering tabs)
+  - window.dockInstance (to get the docking in global scope (for better or worse))
+  - added TabBar._evtContextMenu event / item onContextMenu function so that we can right click dock tabs. also "ctrl + left click" activates this
+  - moved TabBar._evtMouseDown "event.preventDefault()" after close btn check so we don't consume css :after
+  - added item onFocus function and p-mod-current-active to denote which tab content is focused (invoked from currentItem setter)
+  - added TabBar._getDockInstance/_updateFocusedTab
+  - added DockPanel.onTabBarUpdated/onContextMenu
+  - added DockPanel.splittingWidget / change insertSplit->insertSplitImpl
+  - changed MenuItemPrivate initFrom to use Object.assign
+  - TabBar._evtMouseDown changed to allow right mouse button to focus the tab
+*/
 var useAltTextOnTabs = false;
 var contextMenuCloserToMouse = true;
 var useTooltipOnTabs = true;
@@ -7,7 +25,7 @@ var recentTabs = [];
 var activeThemeName = null;
 var baseDocumentTitle = document.title;
 
-const TabType_CustomContent = 1;// Empty (add custom content yourself)
+const TabType_CustomContent = 1;
 const TabType_Terminal = 2;
 const TabType_TextEditor = 3;
 const TabType_MarkdownViewer = 4;
@@ -88,7 +106,13 @@ function onFocusWidget(layout, targetWidget) {
                         if (tabBar._items[i] == targetWidget) {
                             focusedWidget = targetWidget;
                             tabBar._tabs[i].classList.add(CURRENT_CLASS_FOCUSED);
+                            if (tabBar._items[i].customContent != null) {
+                                tabBar._items[i].customContent.onFocus(tabBar._items[i]);
+                            }
                         } else {
+                            if (tabBar._items[i].customContent != null && tabBar._tabs[i].classList.contains(CURRENT_CLASS_FOCUSED)) {
+                                tabBar._items[i].customContent.onFocusLost(tabBar._items[i]);
+                            }
                             tabBar._tabs[i].classList.remove(CURRENT_CLASS_FOCUSED);
                         }
                     }
@@ -172,7 +196,7 @@ function createTextEditor(widget) {
                 'using System;'
             ].join('\n'),
             language: 'csharp',
-            theme: 'vs-dark',
+            theme: 'vs',
             automaticLayout: true
         });
         editor.updateOptions({ autoClosingBrackets: false });// TODO: Make this configurable
@@ -191,13 +215,15 @@ function createTextEditor(widget) {
             editor.focus();
         };
         widget.monaco = editor;
+        setThemeMonaco(widget);
     });
 }
 
 function createXTerm(widget) {
     var fitAddon = new FitAddon.FitAddon();
     var term = new Terminal({
-        fontSize:12,
+        fontSize:13,
+        fontFamily:'Consolas',
         //rendererType: 'dom'
     });
     widget.terminal = term;
@@ -246,8 +272,7 @@ function createXTerm(widget) {
     //widget.node.style.backgroundColor = "#000";
 }
 
-function createCustomContent(widget) {
-    setThemeCustomContent(widget);
+function setWidgetFocusHandler(widget) {
     widget.node.onmousedown = function(event) {
         onFocusWidget(dockInstance.layout, widget);
     };
@@ -257,6 +282,25 @@ function createCustomContent(widget) {
         }
         onFocusWidget(dockInstance.layout, widget);
     };
+}
+
+function createCustomContent(widget, options) {
+    setThemeCustomContent(widget);
+    setWidgetFocusHandler(widget);
+    if (options && options.script) {
+        require(['ui/content/' + options.script], function(content) {
+            widget.customContent = content;
+            if (content.onCloseRequest) {
+                widget.onCloseRequestConfirm = widget.onCloseRequest;
+                widget.onCloseRequest = function(msg) {
+                    content.onCloseRequest(widget, function(targetWidget) {
+                        targetWidget.onCloseRequestConfirm(msg);
+                    });
+                };
+            }
+            content.onCreated(widget, options);
+        });
+    }
 }
 
 function createMarkdownViewer(widget) {
@@ -270,9 +314,10 @@ This is a test
     widget.node.innerHTML = result;
     widget.addClass('markdown-body');
     setThemeMarkdown(widget);
+    setWidgetFocusHandler(widget);
 }
 
-function createContent(title, tabType, description) {
+function createContent(title, tabType, options) {
     if (!tabType) {
         tabType = TabType_CustomContent;
     }
@@ -280,7 +325,7 @@ function createContent(title, tabType, description) {
     widget.addClass('content');
     widget.lastFocusTime = Date.now();
     widget.title.text = title;
-	widget.title.description = description;
+	widget.title.description = options && options.description ? options.description : '';
     widget.title.closable = true;
 	widget.tabType = tabType;
     widget.tabTag = null;
@@ -290,7 +335,7 @@ function createContent(title, tabType, description) {
     };
 	switch (tabType) {
         case TabType_CustomContent:
-            createCustomContent(widget);
+            createCustomContent(widget, options);
             break;
 		case TabType_Terminal:
 			createXTerm(widget);
@@ -532,6 +577,10 @@ function setThemeShared(widget) {
     }
 }
 
+function setThemeMonaco(widget) {
+    widget.monaco._themeService.setTheme(themeThemes[activeThemeName].monaco);
+}
+
 function setThemeCustomContent(widget) {
     setThemeShared(widget);
 }
@@ -539,15 +588,27 @@ function setThemeCustomContent(widget) {
 function setThemeMarkdown(widget) {
     setThemeShared(widget);
     widget.node.style.backgroundColor = markdownThemes[themeThemes[activeThemeName].markdown].background;
-    widget.node.style.padding = '10px';
+    widget.node.style.padding = '5px';
     widget.node.style.userSelect = 'text';
     widget.node.style.cursor = 'auto';
+    widget.node.style.overflow = 'auto';
 }
 
 function setThemeXTerm(widget) {
     setThemeShared(widget);
+    var widgetBg = xtermThemes[themeThemes[activeThemeName].xterm].widgetBackground;
+    if (widgetBg) {
+        widget.node.style.backgroundColor = widgetBg;
+    }
     if (widget.terminal != null) {
         widget.terminal.setOption('theme', xtermThemes[themeThemes[activeThemeName].xterm]);
+    }
+}
+
+function setThemeCss(elementName, urls, themeName) {
+    var element = document.getElementById(elementName);
+    if (element != null && urls.has(themeName)) {
+        element.setAttribute('href', urls.get(themeName));
     }
 }
 
@@ -559,7 +620,10 @@ function setTheme(themeName) {
     }
     if (theme) {
         activeThemeName = themeName;
-        document.getElementById('markdown-theme').setAttribute('href', markdownThemesUrls[theme.markdown]);
+        setThemeCss('markdown-theme', markdownThemesUrls, theme.markdown);
+        setThemeCss('phosphor-dockpanel-theme', phosphorDockpanelThemeUrls, theme.phosphorDockpanel);
+        setThemeCss('phosphor-menu-theme', phosphorMenuThemeUrls, theme.phosphorMenu);
+        setThemeCss('toastr-theme', toastrThemeUrls, theme.toastr);
         setThemeShared();
         if (dockInstance == null) {
             return;
@@ -577,13 +641,15 @@ function setTheme(themeName) {
                 case TabType_MarkdownViewer:
                     setThemeMarkdown(widget);
                     break;
+                case TabType_TextEditor:
+                    setThemeMonaco(widget);
+                    break;
             }
         }
     }
 }
 
 function main() {
-    setTheme('light');
     document.getElementById('pageLoadingDiv').remove();
     document.body.onkeydown = function(event) {
         // Prevent unintuitive key presses on body focus (such as tab)
@@ -603,11 +669,11 @@ function main() {
     var r3 = createContent('Red', TabType_Terminal);
     var b1 = createContent('Blue', TabType_Terminal);
     var b2 = createContent('Blue', TabType_Terminal);
-    var g1 = createContent('GreenGreen', TabType_CustomContent, 'GreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreen');
+    var g1 = createContent('GreenGreen', TabType_CustomContent, { script: 'example_chart.js', description: 'GreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreen' });
     var g2 = createContent('Green', TabType_MarkdownViewer);
     var g3 = createContent('Green');
     var y1 = createContent('Hex', '');
-    var y2 = createContent('Yellow');
+    var y2 = createContent('Yellow', TabType_CustomContent, { script: 'example_chart.js' });
     dockInstance = new libUI.DockPanel();
     dockInstance.useAltTextOnTabs = true;
     dockInstance.focusedWidget = null;
@@ -690,4 +756,3 @@ function main() {
 		dockInstance.update();
 	};
 }
-window.onload = main;

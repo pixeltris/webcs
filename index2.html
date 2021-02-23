@@ -1,0 +1,31 @@
+<html>
+	<meta charset="utf-8"/>
+    <title>webcs</title>
+    <script async type="text/javascript" src="mono/dotnet.js"></script>
+    <script>
+        function onMonacoReady() {
+            var config = {
+                vfs_prefix: 'managed',
+                deploy_prefix: 'managed',
+                enable_debugging: 0,
+                file_list: ['mscorlib.dll', 'netstandard.dll', 'System.dll', 'WebAssembly.Bindings.dll', 'hello.exe', 'mcs-host.exe', 'mcs.exe', 'System.Core.dll', 'System.Xml.dll', 'Mono.Security.dll', 'System.Net.Http.dll', 'System.Net.Http.WebAssemblyHttpHandler.dll', 'System.Memory.dll']
+            };
+            window.Module = {
+                INITIAL_MEMORY: 536870912,
+                onRuntimeInitialized: function () {
+                    MONO.mono_load_runtime_and_bcl (
+                        config.vfs_prefix,
+                        config.deploy_prefix,
+                        config.enable_debugging,
+                        config.file_list,
+                        function () {
+                            console.log('hi');
+                            BINDING.call_static_method("[hello] Program:Main", []);
+                        }
+                    )
+                },
+            };
+        }
+        onMonacoReady();
+    </script>
+</html>

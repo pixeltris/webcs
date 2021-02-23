@@ -8,11 +8,11 @@ using System.IO;
 
 // csc svr.cs
 // Simple server that gives the browser whatever it wants...
-class SimpleFileServer
+class StaticFileServer
 {
     static void Main()
     {
-        SimpleFileServer svr = new SimpleFileServer();
+        StaticFileServer svr = new StaticFileServer();
         svr.Start();
         Console.WriteLine("Started on http://localhost:" + svr.Port);
         Console.ReadLine();
@@ -24,7 +24,7 @@ class SimpleFileServer
 
     public int Port { get; set; }
 
-    public SimpleFileServer(int port = 80)
+    public StaticFileServer(int port = 80)
     {
         Port = port;
     }
@@ -33,9 +33,9 @@ class SimpleFileServer
     {
         rootDirectory = Path.GetFullPath(Environment.CurrentDirectory);
         DirectoryInfo dirInfo = new DirectoryInfo(rootDirectory);
-        if (dirInfo.Name == "hosting" && !Directory.Exists(Path.Combine(dirInfo.FullName, "hosting")))
+        if (dirInfo.Name == "extra" && !Directory.Exists(Path.Combine(dirInfo.FullName, "extra")))
         {
-            // If we are in the "hosting" directory, set the root directory to one above that (as that's the root directory)
+            // If we are in the "extra" directory, set the root directory to one above that (as that's the root directory)
             rootDirectory = dirInfo.Parent.FullName;
         }
 

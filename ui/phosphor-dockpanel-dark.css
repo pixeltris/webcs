@@ -1,0 +1,378 @@
+/*THEMED(new)*/
+:root {
+    --panelBorderColor: #424242;
+    --panelBorderStyle: 1px solid var(--panelBorderColor);
+}
+
+.p-Widget {
+	box-sizing: border-box;
+	position: relative;
+	overflow: hidden;
+	cursor: default;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+
+.p-Widget.p-mod-hidden {
+	display: none;
+}
+
+
+
+
+
+
+.p-TabBar {
+	display: flex;
+	flex-direction: column;
+}
+
+.p-TabBar-header {
+	flex: 0 0 auto;
+	display: none;
+}
+
+.p-TabBar-footer {
+	flex: 0 0 1px;
+    background: var(--panelBorderColor);/*THEMED(modified)*/
+}
+
+.p-TabBar-body {
+	display: flex;
+	flex-direction: row;
+	flex: 1 1 auto;
+}
+
+.p-TabBar-content {
+	display: flex;
+	flex-direction: row;
+	flex: 1 1 auto;
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	min-width: 0;
+	align-items: flex-end;
+}
+
+.p-TabBar-tab {
+	display: flex;
+	flex-direction: row;
+	box-sizing: border-box;
+	overflow: hidden;
+	
+	/*flex is used to create a common default tab size.
+	We don't really want this as it adds bloat.
+	One good thing about it is that no text can be larger than this size.
+	We therefore need to set a maximum width if not using flex (and if we wan't a max width)*/
+	/*flex: 0 1 125px;*/
+	max-width:160px;/* NOTE: We should combine this with a "text-overflow: ellipsis;" on the "p-TabBar-tabText" class */
+	
+	min-height: 20px;
+	max-height: 20px;
+	min-width: 35px;
+	margin-left: -1px;
+	border: var(--panelBorderStyle);/*THEMED(modified)*/
+	border-bottom: none;
+	padding-left:7px;
+	padding-right:4px;
+	background: #232323;/*THEMED(modified)*/
+	font: 12px Helvetica, Arial, sans-serif;
+}
+
+.p-TabBar-tab:first-child {
+	margin-left: 0;
+}
+
+.p-TabBar-tab.p-mod-current {
+	min-height: 23px;
+	max-height: 23px;
+	background: #1e1e1e;/*THEMED(modified)-keep in sync with ui-theme.js themeThemeDarkBg*/
+	transform: translateY(1px);
+}
+
+/* This means the teb content is focused */
+.p-TabBar-tab.p-mod-current-focused {
+    font-weight: bold;
+    font-style:italic;
+}
+
+.p-TabBar-tab:hover:not(.p-mod-current) {
+	background: #303030;/*THEMED(modified)*/
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon {
+	margin-left: 4px;
+	margin-top: 3px;
+	height:12px;
+	width:12px;
+	/*background-color:#191919;*//*THEMED(modified/removed)*/
+	/*border: 1px solid #484848;*//*THEMED(modified/removed)*/
+	/*border-radius:2px;*//*THEMED(removed)*/
+	text-align:center;
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:hover {
+	/*background-color:#b9b9b9;*//*THEMED(removed)*/
+	/*border: 1px solid #949494;*//*THEMED(removed)*/
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:active {
+	/*background-color:#868686;*//*THEMED(removed)*/
+	/*border: 1px solid #606060;*//*THEMED(removed)*/
+}
+
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:before {
+	margin-top:-3px;/*THEMED(modified)*/
+	display:block;
+	align-content:center;
+	/*content: '\F00D';*/
+	font-family: FontAwesome;
+	color:#848484;
+	/*content: '\274C';
+	font-size:8px;*/
+	content: '\2716';
+	font-size:9px;/*THEMED(modified)*/
+    text-decoration:none;
+    font-weight:normal;
+    font-style:normal;
+}
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:hover:before {
+	color:#e0e0e0;/*THEMED(new)*/
+}
+.p-TabBar-tab.p-mod-closable>.p-TabBar-tabCloseIcon:active:before {
+	color:#5f5f5f;/*THEMED(modified)*/
+}
+
+.p-TabBar-tab.p-mod-drag-image {
+	min-height: 23px;
+	max-height: 23px;
+	min-width: 125px;
+	border: none;
+	box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+	transform: translateX(-40%) translateY(-58%);
+}
+
+.p-TabBar-tabIcon,
+.p-TabBar-tabCloseIcon {
+	flex: 0 0 auto;
+}
+
+.p-TabBar-tabText {
+	flex: 1 1 auto;
+	overflow: hidden;
+	white-space: nowrap;
+    color: #c5c5c5/*THEMED(new)*/
+}
+
+.p-TabBar.p-mod-dragging .p-TabBar-tab {
+	position: relative;
+	left: 0;
+	transition: left 150ms ease;
+	/* keep in sync with JS */
+}
+
+.p-TabBar.p-mod-dragging .p-TabBar-tab.p-mod-dragging {
+	transition: none;
+}
+
+.p-TabPanel-tabBar {
+	z-index: 1;
+}
+
+.p-TabPanel-stackedPanel {
+	z-index: 0;
+}
+
+.p-TabBar {
+	min-height: 24px;
+	max-height: 24px;
+}
+
+.p-TabBar-tabIcon,
+.p-TabBar-tabText,
+.p-TabBar-tabCloseIcon {
+	line-height: 20px;
+}
+
+.p-TabBar-tabText {
+	text-overflow: ellipsis;/* Add a '...' if our text gets trucated */
+}
+
+
+
+
+
+
+
+.p-DockPanel {
+	position: relative;
+	z-index: 0;
+}
+
+.p-DockPanel>.p-Widget {
+	position: absolute;
+	z-index: 0;
+}
+
+.p-DockPanel-overlay {
+	box-sizing: border-box;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 0;
+	height: 0;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.p-TabBar-tab.p-mod-hidden,
+.p-DockPanel-overlay.p-mod-hidden {
+	display: none;
+}
+
+
+
+
+
+.p-SplitPanel {
+	z-index: 0;
+}
+
+.p-SplitPanel-child {
+	z-index: 0;
+}
+
+.p-SplitPanel-handle {
+	z-index: 1;
+}
+
+.p-SplitPanel-handle.p-mod-hidden {
+	display: none;
+}
+
+.p-SplitPanel-handle:after {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	content: '';
+}
+
+.p-SplitPanel.p-mod-horizontal>.p-SplitPanel-handle {
+	cursor: ew-resize;
+}
+
+.p-SplitPanel.p-mod-vertical>.p-SplitPanel-handle {
+	cursor: ns-resize;
+}
+
+.p-SplitPanel.p-mod-horizontal>.p-SplitPanel-handle:after {
+	left: 50%;
+	min-width: 7px;
+	transform: translateX(-50%);
+}
+
+.p-SplitPanel.p-mod-vertical>.p-SplitPanel-handle:after {
+	top: 50%;
+	min-height: 7px;
+	transform: translateY(-50%);
+}
+
+
+
+
+body {
+	margin: 0;
+	padding: 0;
+	background: #252525;/*THEMED(modified)*/
+    color: #d4d4d4;/*THEMED(new)*/
+    color-scheme: dark;/*for scrollbars*//*THEMED(modified)*/
+	overflow:hidden;
+	height:100%;
+	text-rendering: optimizeLegibility;
+	font-family: Helvetica, Arial, sans-serif;
+}
+
+body.p-mod-override-cursor * {
+	cursor: inherit !important;
+}
+
+:root {
+	--header-size:0px;
+	--footer-size:0px;
+	--docking-window-border-padding:0px;
+	--docking-panel-border-padding:0px;
+    /* Also see DockPanelPrivate.spacingProperty (spacing between panels) */
+}
+
+#main {
+	position: absolute;
+	top: calc(var(--docking-window-border-padding) + var(--header-size));
+	left: var(--docking-window-border-padding);
+	right: var(--docking-window-border-padding);
+	bottom: calc(var(--docking-window-border-padding) + var(--footer-size));
+}
+
+#main-header {
+}
+#main-footer {
+}
+
+.content {
+	/*border: 1px solid black;*/
+	min-width: 50px;
+	min-height: 50px;
+}
+
+.p-DockTabPanel {
+	padding-right: 2px;
+	padding-bottom: 2px;
+}
+
+.p-DockTabPanel>.p-StackedPanel {
+	padding: var(--docking-panel-border-padding);
+	/*background: white;*//*THEMED(removed)*/
+	border: var(--panelBorderStyle);/*THEMED(modified)*/
+	border-top: none;
+	/*box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);*//*THEMED(removed)*/
+}
+
+.p-DockPanel-overlay {
+	background: rgba(0, 0, 0, 0.3);/*THEMED(modified)*/
+	border: 1px dashed rgba(255, 255, 255, 0.6);/*THEMED(modified)*/
+}
+
+.p-DockPanel-overlay.p-mod-root-top,
+.p-DockPanel-overlay.p-mod-root-left,
+.p-DockPanel-overlay.p-mod-root-right,
+.p-DockPanel-overlay.p-mod-root-bottom,
+.p-DockPanel-overlay.p-mod-root-center {
+	border-width: 2px;
+}
+
+/*.p-TabPanel>.p-StackedPanel {
+	background: white;
+	border: 1px solid #C0C0C0;
+	border-top: none;
+}*//*THEMED(removed)*/
+
+.p-Tooltip {
+	position:absolute;
+	/*margin-right:20px;*/
+	z-index:9999;
+	font-size:12px;
+	color:#555;
+	border:1px solid #555;
+	border-radius:3px;
+	box-shadow:2px 2px 1px rgba(0, 0, 0, 0.2);
+	padding:4px;
+	width:auto;
+	word-wrap:break-word;
+	overflow-wrap:anywhere;
+	background-image:linear-gradient(#FFFFFF,#E4E5F2);
+	user-select:none;
+	pointer-events:none;
+}

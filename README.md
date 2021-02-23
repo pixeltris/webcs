@@ -1,30 +1,42 @@
-Fully client sided web tool for coding and running .NET / C# programs.
+# webcs
+
+Compile / run C# in a web browser (powered by [Mono](https://github.com/mono/mono/tree/master/sdks/wasm)).
+
+Try it here https://pixeltris.github.io/webcs
 
 ## Features
 - Run .NET assemblies.
 - Compile C# code with `msc` or `roslyn`.
+- Client sided code execution.
+- Offline usage (via service workers).
 - Virtual file system with persistance, allowing you to come back to your code / compiled assemblies.
 - Terminals for interacting with `Console` programs, and a docking UI for multiple programs to run at the same time.
-- WinForms implementaion (extremely basic / stripped down).
 
-## How does it work?
-- A WebAssembly build of Mono is used to run .NET assemblies (Blazor *isn't* used here as it doesn't provide any benefit on top of Mono for this scenario).
-- `xterm.js` (terminals), `Monaco` (code editor), `PhosphorJS` (docking/menus), `markdown-it` (markdown), `awesome-notifications` (notifications).
-
-## Notes / resources / help
-- *This project is suited for simple programs. If you want to use C#/.NET in a web browser and want something more try [Blazor](https://dotnet.microsoft.com/apps/aspnet/web-apps/blazor), [Uno Platform](https://github.com/unoplatform/uno), or [Bridge.NET](https://github.com/bridgedotnet/Bridge).
-- *Don't use this project for "real" coding. If you want to code in a web browser use https://github.com/cdr/code-server or https://github.com/eclipse-theia/theia.*
+## Additional info
 - IndexedDB (mounted to `/idb/`) is used for storage. It should be fairly large, but if you're low on disk space (or creating very large files) you may lose data.
 - A list of built-in terminal commands can be found [here](TODO) - md(markdown),edit(monaco),mcs(mcs),csc(csc/roslyn),roslyn(explicit roslyn),ls,dir,cd,pwd,mkdir,cp,clear,cls
 - [Terminal.Gui](https://github.com/migueldeicaza/gui.cs) is useful for building text-based user interfaces with C#.
-- [Self-hosting](/hosting/README.md) **lt;dr use any static web server**.
+- [Self-hosting](/extra/README.md#Self-hosting) **lt;dr use any static web server**.
+
+## Dependencies
+This project has a few dependencies. There aren't any package managers used here. To update dependencies you can find urls in [index.html](/index.html) and [extra-urls.txt](/extra/extra-urls.txt).
+The additional dependencies are subject to change.
+- Required (js): `Mono` (.NET wasm runtime), `xterm.js` (terminals), `Monaco` (code editor), `PhosphorJS` (docking / menus), `markdown-it` (markdown), `Font Awesome` (font based icons).
+- Additional (js): `jquery`+`jquery-ui`, `toastr` (notifications), `SlickGrid` (data grid), `chart.js` (charts), `forge` (js TLS).
+- Additional (cs): `websocket-sharp` (websockets), `BouncyCastle` (crypto / certificate generation).
 
 ## TODO
-- [X] Context menu clicking body, allow terminals to be created when nothing else is there
-- [X] Context menu for tabs (copy file path, save, etc)
-- [X] Fix monaco tab focus
-- [X] Mardown ui
-- [/] Color scheming - TODO: Finish this (add xterm light theme, add dark context menus, add dark docking, add dark scroll bars (xterm / markdown))
+- [x] Context menu clicking body, allow terminals to be created when nothing else is there
+- [x] Context menu for tabs (copy file path, save, etc)
+- [x] Fix monaco tab focus
+- [x] Mardown ui
+- [x] Color scheming
+- [ ] Make dark theme less dark / improve contrasts. Might also need larger fonts?
+- [x] https://github.com/CodeSeven/toastr
+- [x] chart.js
+- [x] https://github.com/6pac/SlickGrid
+- [ ] chartjs example / theming
+- [ ] slickgrid example / theming
 - [ ] Hook up console
 - [ ] Appdomains
 - [ ] Dropdown list when there's too many tabs (VisualStudio-like)
@@ -33,17 +45,14 @@ Fully client sided web tool for coding and running .NET / C# programs.
 - [ ] Smaller builds
 - [ ] DotNetAnywhere
 - [ ] Synchronization across brower tabs / windows
-- [ ] rotor,csc,mono -> jslinux,halfix,v86
+- [ ] rotor(sccomp/scc),dotgnu,old msc versions
 - [ ] ctrl+tab to switch tabs (some sort of gridview / list to state what tabs are what - include a search bar)
 - [ ] ctrl+t to open the tab menu
 - [ ] ctrl+n to create a new terminal
 - [ ] ctrl+b to open the base terminal?
 - [ ] Add ability to hide tabs (essentially create header/footers). This will require extra menu items to show them again.
-- [ ] Websockets / remote file storage. Also maybe hook up the virtual file system so a locally hosted SMB server can use it?
-- [ ] x-spreadsheets/ag-grid/reactgrid? chart.js?
-- [ ] https://github.com/f3oall/awesome-notifications
-- [ ] Simple WinForms implementaion
-- [ ] WinForm web GUI designer? Very complex, unlikely to ever happen.
+- [ ] Websockets / remote file storage. Keep it simple. Add "WEBCS-READONLY.txt" check on any readonly folders. Project will be called WcsEx (WcsEx.exe) - WinForms will be called WcsWinForms (but System.Windows.Forms.dll)
+- [ ] https://github.com/kjur/jsrsasign / https://github.com/digitalbazaar/forge / http://www.bouncycastle.org/csharp/
 
 ## Related
 - https://github.com/nbarkhina/CSharp-In-Browser

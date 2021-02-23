@@ -1,0 +1,144 @@
+.p-MenuBar {
+	padding-left: 5px;
+	background: #FEFEFE;
+	color: rgba(0, 0, 0, 0.87);
+	border-bottom: 1px solid #DDDDDD;
+	font: 13px Helvetica, Arial, sans-serif;
+}
+
+.p-MenuBar-content {
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: row;
+	list-style-type: none;
+}
+
+.p-MenuBar-item.p-mod-hidden {
+	display: none;
+}
+
+.p-MenuBar-menu {
+	transform: translateY(-1px);
+}
+
+.p-MenuBar-item {
+	padding: 4px 8px;
+	border-left: 1px solid transparent;
+	border-right: 1px solid transparent;
+	box-sizing: border-box;
+}
+
+.p-MenuBar-item.p-mod-active {
+	background: #E5E5E5;
+}
+
+.p-MenuBar-item.p-mod-disabled {
+	color: rgba(0, 0, 0, 0.26);
+}
+
+.p-MenuBar-item.p-mod-separator-type {
+	margin: 2px;
+	padding: 0;
+	border: none;
+	border-left: 1px solid #DDDDDD;
+}
+
+.p-MenuBar.p-mod-active .p-MenuBar-item.p-mod-active {
+	z-index: 1000000;
+	background: white;
+	border-left: 1px solid #C0C0C0;
+	border-right: 1px solid #C0C0C0;
+	box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.2);
+}
+
+.p-Menu {
+	z-index: 10000;
+	padding: 3px 0px;
+	background: white;
+	color: rgba(0, 0, 0, 0.87);
+	border: 1px solid #C0C0C0;
+	font: 12px Helvetica, Arial, sans-serif;
+	box-shadow: 0px 1px 6px rgba(0, 0, 0, 0.2);
+	position: absolute;
+	white-space: nowrap;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.p-Menu-content {
+	margin: 0;
+	padding: 0;
+	display: table;
+	list-style-type: none;
+}
+
+.p-Menu-item.p-mod-hidden {
+	display: none;
+}
+
+.p-Menu-itemIcon,
+.p-Menu-itemSubmenuIcon {
+	display: table-cell;
+	text-align: center;
+}
+
+.p-Menu-item {
+	display: table-row;
+}
+
+.p-Menu-item.p-mod-active {
+	background: #E5E5E5;
+}
+
+.p-Menu-item.p-mod-disabled {
+	color: rgba(0, 0, 0, 0.26);
+}
+
+.p-Menu-item.p-type-separator>span {
+	padding: 0;
+	height: 9px;
+}
+
+.p-Menu-item.p-type-separator>span::after {
+	content: '';
+	display: block;
+	position: relative;
+	top: 4px;
+	border-top: 1px solid #DDDDDD;
+}
+
+.p-Menu-item.p-type-check.p-mod-checked>.p-Menu-itemIcon::before {
+	content: '\F00C';
+}
+
+.p-Menu-item.p-type-submenu>.p-Menu-itemSubmenuIcon::before {
+	content: '\F0DA';
+}
+
+.p-Menu-itemIcon {
+	width: 21px;
+	padding: 4px 2px;
+}
+
+.p-Menu-itemText {
+	padding: 4px 35px 4px 2px;
+	display: table-cell;
+	text-align: left;
+}
+
+.p-Menu-itemShortcut {
+	padding: 4px 0px;
+	display: table-cell;
+	text-align: right;
+}
+
+.p-Menu-itemSubmenuIcon {
+	width: 16px;
+	padding: 4px 0px;
+}
+
+.p-Menu-itemIcon::before,
+.p-Menu-itemSubmenuIcon::before {
+	font-family: FontAwesome;
+}

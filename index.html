@@ -1,27 +1,69 @@
 <html>
 	<meta charset="utf-8"/>
-    <title>webcs-tools</title>
-    <!--TODO: integrity on this project is somewhat important, add integrity to script tabs and fetch requests (dlls, etc)-->
-    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
-	<link href="ui/phosphor-dockpanel-menu.css" rel="stylesheet" type="text/css">
-    <link href="" rel="stylesheet" type="text/css", id="markdown-theme"><!--Assigned when setting theme-->
-    <link href="ui/xterm-4.10.0.css" rel="stylesheet" type="text/css"><!--https://cdn.jsdelivr.net/npm/xterm@4.10.0/css/xterm.css-->
-    <script type="text/javascript" src="ui/xterm-4.10.0.js"></script><!--https://cdn.jsdelivr.net/npm/xterm@4.10.0/lib/xterm.min.js-->
-    <script type="text/javascript" src="ui/xterm-addon-fit-0.5.0.js"></script><!--https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.5.0/lib/xterm-addon-fit.js-->
-    <script type="text/javascript" src="ui/markdown-it-12.0.4.min.js"></script><!--https://cdn.jsdelivr.net/npm/markdown-it@12.0.4/dist/markdown-it.min.js-->
-    <script type="text/javascript" src="ui/require-2.3.6.min.js"></script><!--https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js-->
-    <script type="text/javascript" src="ui/phosphor-dockpanel-menu.js"></script><!--https://phosphorjs.github.io/examples/dockpanel/bundle.js + http://phosphorjs.github.io/examples/menus/bundle.js-->
+    <title>webcs</title>
+    <!--TODO: Add integrity to the script tags and fetch requests (dlls, etc)?-->
+    <!--NOTE: Some file names here have been modified to include the version number. Follow urls to check for new versions.-->
+    <link rel="stylesheet" type="text/css" href="ui/font-awesome-4.7.0/css/font-awesome.min.css"><!--https://fontawesome.com/v4.7.0/get-started/-->
+	<link rel="stylesheet" type="text/css" href="ui/phosphor-dockpanel-dark.css" id="phosphor-dockpanel-theme">
+    <link rel="stylesheet" type="text/css" href="ui/phosphor-menu-dark.css" id="phosphor-menu-theme">
+    <link rel="stylesheet" type="text/css" href="" id="markdown-theme">
+    <link rel="stylesheet" type="text/css" href="ui/xterm-4.10.0.css"><!--https://www.jsdelivr.com/package/npm/xterm-->
+    <script type="text/javascript" src="ui/xterm-4.10.0.js"></script><!--https://www.jsdelivr.com/package/npm/xterm-->
+    <script type="text/javascript" src="ui/xterm-addon-fit-0.5.0.js"></script><!--https://www.jsdelivr.com/package/npm/xterm-addon-fit-->
+    <script type="text/javascript" src="ui/markdown-it-12.0.4.min.js"></script><!--https://www.jsdelivr.com/package/npm/markdown-it?path=dist-->
+    <script type="text/javascript" src="ui/require-2.3.6.min.js"></script><!--https://requirejs.org/docs/download.html-->
+    <script type="text/javascript" src="ui/phosphor-dockpanel-menu.js"></script><!--https://phosphorjs.github.io/examples/dockpanel/bundle.js + https://phosphorjs.github.io/examples/menus/bundle.js (see https://phosphorjs.github.io/examples.html)-->
+    <!--BEGIN_ADDITIONAL_UI-->
+    <!--These are additional UI components which provide some useful functionality, but aren't really required.-->
+    <!--Delete this section as needed.-->
+    <link rel="stylesheet" type="text/css" href="" id="toastr-theme">
+    <script type="text/javascript" src="ui/extra/jquery-3.5.1.min.js"></script><!--https://code.jquery.com/-->
+    <script>require(['ui/extra/toastr-2.1.4.min.js'],function(e){<!--https://www.jsdelivr.com/package/npm/toastr?path=build-->
+        window.toastr = e;
+        toastr.options.progressBar = true;
+        toastr.options.newestOnTop = true;
+        toastr.options.closeButton = true;
+        toastr.options.showDuration = 150;
+        toastr.options.hideDuration = 300;
+        toastr.options.positionClass = 'toast-bottom-right';
+    });</script>
+    <script>require([<!--https://github.com/6pac/SlickGrid/releases/tag/2.4.3-->
+        'ui/extra/slickgrid/jquery-ui-1.11.3.min.js',
+        'ui/extra/slickgrid/jquery.event.drag-2.3.0.js',
+        'ui/extra/slickgrid/slick.core.js',
+        'ui/extra/slickgrid/slick.formatters.js',
+        'ui/extra/slickgrid/slick.grid.js',
+        'ui/extra/slickgrid/slick.dataview.js',
+        ],function(e){}
+    );</script>
+    <link rel="stylesheet" type="text/css" href="ui/extra/Chart-2.9.4.css"><!--https://github.com/chartjs/Chart.js/releases/tag/v2.9.4-->
+    <script>require([
+        'ui/extra/Chart-2.9.4.bundle.min.js',
+        'ui/extra/Chart-utils.js',
+        ],function(e){}
+    );</script>
+    <!--END_ADDITIONAL_UI-->
     <script type="text/javascript" src="ui/ui-theme.js"></script>
 	<script type="text/javascript" src="ui/ui.js"></script>
-    <script async type="text/javascript" src="mono/dotnet.js"></script>
+    <script async type="text/javascript" src="mono/dotnet.js"></script><!--https://github.com/mono/mono/blob/master/sdks/wasm/docs/getting-started/obtain-wasm-sdk.md-->
     <script async type="text/javascript" src="mono/dotnet-extra.js"></script>
     <script>
-        var markdownThemesUrls = [];
-        markdownThemesUrls['dark'] = 'ui/github-markdown-dark.css';<!--(fetched 11th feb 2021) https://mrdrivingduck.cn/github-markdown-css/github-markdown-dark.css-->
-        markdownThemesUrls['light'] = 'ui/github-markdown-light-4.0.0.min.css';<!--https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css-->
+        var markdownThemesUrls = new Map();
+        markdownThemesUrls.set('dark', 'ui/github-markdown-dark.css');<!--https://mrdrivingduck.cn/github-markdown-css/github-markdown-dark.css (fetched 11th feb 2021)-->
+        markdownThemesUrls.set('light', 'ui/github-markdown-light-4.0.0.min.css');<!--https://cdnjs.com/libraries/github-markdown-css-->
+        var phosphorDockpanelThemeUrls = new Map();
+        phosphorDockpanelThemeUrls.set('dark', 'ui/phosphor-dockpanel-dark.css');
+        phosphorDockpanelThemeUrls.set('light', 'ui/phosphor-dockpanel-light.css');
+        var phosphorMenuThemeUrls = new Map();
+        phosphorMenuThemeUrls.set('dark', 'ui/phosphor-menu-dark.css');
+        phosphorMenuThemeUrls.set('light', 'ui/phosphor-menu-light.css');
+        var toastrThemeUrls = new Map();
+        toastrThemeUrls.set('dark', 'ui/extra/toastr-2.1.4-dark.css');<!--("THEMED")-->
+        toastrThemeUrls.set('light', 'ui/extra/toastr-2.1.4.css');<!--("THEMED")https://www.jsdelivr.com/package/npm/toastr?path=build-->
+        setTheme('dark');
     </script>
     <script>
-        document.write("<div id='pageLoadingDiv'>Loading...</div>")
+        <!--TODO: Change these to local urls-->
         require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@latest/min/vs' }});
         window.MonacoEnvironment = { getWorkerUrl: () => proxy };
         let proxy = URL.createObjectURL(new Blob([`
@@ -33,6 +75,7 @@
         require(["vs/editor/editor.main"], function () {
             // There's a bug which breaks tab focus if monaco isn't loaded prior to the ui. Just wait for monaco...
             onMonacoReady();
+            main();
         });
         function onMonacoReady() {
             var config = {
@@ -41,7 +84,7 @@
                 enable_debugging: 0,
                 file_list: ['mscorlib.dll', 'netstandard.dll', 'System.dll', 'WebAssembly.Bindings.dll', 'hello.exe', 'mcs-host.exe', 'mcs.exe', 'System.Core.dll', 'System.Xml.dll', 'Mono.Security.dll', 'System.Net.Http.dll', 'System.Net.Http.WebAssemblyHttpHandler.dll', 'System.Memory.dll']
             };
-            var Module = { 
+            window.Module = { 
                 onRuntimeInitialized: function () {
                     MONO.mono_load_runtime_and_bcl (
                         config.vfs_prefix,
@@ -73,48 +116,13 @@
             }
         }
     </script>
-    <noscript>JavaScript must be enabled to use this website.</br></br>See <a href="https://github.com/pixeltris/webcs-tools">https://github.com/pixeltris/webcs-tools</a>.</script>
+    <noscript>
+        <style>
+            #pageLoadingDiv{display:none;}
+            body{padding:5px}
+            a{color:inherit;}
+        </style>
+        <body>Enable JavaScript to use this website</br></br><a href="https://github.com/pixeltris/webcs">https://github.com/pixeltris/webcs</a></body>
+    </noscript>
+    <div id='pageLoadingDiv'>Loading...</div>
 </html>
-<!-- 
- - dockpanel was taken from https://phosphorjs.github.io/examples/dockpanel/bundle.js on 3rd December 2020
- - menus was taken from http://phosphorjs.github.io/examples/menus/bundle.js on 3rd December 2020
- - Tweaks to dockpanel:
-   - Removed CodeMirrorWidget
-   - useAltTextOnTabs (adds an alt tooltip when hovering tabs)
-   - contextMenuCloserToMouse (moves context menu closer to mouse y coord if overlapping window height (rather than moving upwards entire height of context menu))
-   - useTooltipOnTabs (adds a tooltip when hovering tabs)
-   - window.dockInstance (to get the docking in global scope (for better or worse))
-   - added TabBar._evtContextMenu event / item onContextMenu function so that we can right click dock tabs. also "ctrl + left click" activates this
-   - moved TabBar._evtMouseDown "event.preventDefault()" after close btn check so we don't consume css :after
-   - added item onFocus function and p-mod-current-active to denote which tab content is focused (invoked from currentItem setter)
-   - added TabBar._getDockInstance/_updateFocusedTab
-   - added DockPanel.onTabBarUpdated/onContextMenu
-   - added DockPanel.splittingWidget / change insertSplit->insertSplitImpl
-   - changed MenuItemPrivate initFrom to use Object.assign
-   - TabBar._evtMouseDown changed to allow right mouse button to focus the tab
--->
-<!-- Terminal emulators:
-- jQuery Terminal Emulator - https://github.com/jcubic/jquery.terminal / https://terminal.jcubic.pl/
-- term.js - https://github.com/chjj/term.js
-- jor1k terminal.js - https://github.com/s-macke/jor1k/blob/master/js/master/dev/terminal.js
-- xterm.js - https://github.com/xtermjs/xterm.js (term.js fork?)
-- jslinux term.js - https://bellard.org/jslinux/term.js
-- termlib.js - https://www.masswerk.at/termlib/index.html / https://www.masswerk.at/termlib/termlib.js / https://github.com/unilogue/termlib
---------------------------------------------------------------------------
--- The following are a bit more than bare bone terminal emulators
---------------------------------------------------------------------------
-- hyper - https://github.com/vercel/hyper
-- upterm - https://github.com/railsware/upterm
-- GateOne - https://github.com/liftoff/GateOne
-- tty.js - https://github.com/chjj/tty.js
---------------------------------------------------------------------------
--- xterm.js seems the best for us (mouse support / least buggy)
---------------------------------------------------------------------------
--->
-<!-- Charts:
-Highcharts - used these some years ago, really nice charts (commercial licensing)
-Google Charts - can't host locally
-Chart.js - 51.2kb (compressed) - 169kb (uncompressed)
-uPlot - 17.0kb (compressed) - 38kb (uncompressed)
-chartist-js - 10kb
--->

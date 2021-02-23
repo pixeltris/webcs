@@ -1,0 +1,3 @@
+TODO link to:
+websocket-sharp
+BouncyCastle
