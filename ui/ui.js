@@ -669,11 +669,11 @@ function main() {
     var r3 = createContent('Red', TabType_Terminal);
     var b1 = createContent('Blue', TabType_Terminal);
     var b2 = createContent('Blue', TabType_Terminal);
-    var g1 = createContent('GreenGreen', TabType_CustomContent, { script: 'example_chart.js', description: 'GreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreen' });
+    var g1 = createContent('GreenGreen', TabType_CustomContent, { script: 'example.js', description: 'GreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreen' });
     var g2 = createContent('Green', TabType_MarkdownViewer);
     var g3 = createContent('Green');
     var y1 = createContent('Hex', '');
-    var y2 = createContent('Yellow', TabType_CustomContent, { script: 'example_chart.js' });
+    var y2 = createContent('Yellow', TabType_CustomContent, { script: 'example.js' });
     dockInstance = new libUI.DockPanel();
     dockInstance.useAltTextOnTabs = true;
     dockInstance.focusedWidget = null;

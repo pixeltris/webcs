@@ -7,8 +7,7 @@ Try it here https://pixeltris.github.io/webcs
 ## Features
 - Run .NET assemblies.
 - Compile C# code with `msc` or `roslyn`.
-- Client sided code execution.
-- Offline usage (via service workers).
+- Client sided code execution with caching for offline usage.
 - Virtual file system with persistance, allowing you to come back to your code / compiled assemblies.
 - Terminals for interacting with `Console` programs, and a docking UI for multiple programs to run at the same time.
 
@@ -32,11 +31,6 @@ The additional dependencies are subject to change.
 - [x] Mardown ui
 - [x] Color scheming
 - [ ] Make dark theme less dark / improve contrasts. Might also need larger fonts?
-- [x] https://github.com/CodeSeven/toastr
-- [x] chart.js
-- [x] https://github.com/6pac/SlickGrid
-- [ ] chartjs example / theming
-- [ ] slickgrid example / theming
 - [ ] Hook up console
 - [ ] Appdomains
 - [ ] Dropdown list when there's too many tabs (VisualStudio-like)
