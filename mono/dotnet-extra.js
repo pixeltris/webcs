@@ -28,11 +28,11 @@ var WebcsInterop = {
     fullLoaderUsePrompt: false,// If true prompt (y/n in terminal) when fetching full .NET runtime
     fullLoaderUseSimpleProgressBar: false,// If true output a simple loading progress bar when fetching full .NET runtime
     isRuntimeInitialized: false,
-    fileListUrl: '/mono/managed/files.json',
+    fileListUrl: 'mono/managed/files.json',
     entryPointBinaryName: 'webcs.exe',
     entryPointClassName: 'Webcs',
     mountPointDir: 'managed',
-    mountPointUrl: '/mono/managed/',
+    mountPointUrl: 'mono/managed/',
     localStorageMountPoint: '/loc',
     indexedDbMountPoint: '/idb',
     init_mono_globalization_mode: null,//'invariant' / 'icu'
