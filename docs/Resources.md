@@ -9,6 +9,7 @@ Compile / run C# locally in a web browser
 - https://github.com/nbarkhina/CSharp-In-Browser
 - https://github.com/Suchiman/Runny
 - https://github.com/sapsari/website-blazor-demo
+- https://github.com/2427dkusiro/WasmCSharpEditor
 - https://github.com/fsbolero/TryFSharpOnWasm - F#
 - https://github.com/amieres/FSharpStation - F# (not sure if working)
 

@@ -386,7 +386,7 @@ function createXTerm(widget, options) {
     var fitAddon = new FitAddon.FitAddon();
     var term = new Terminal({
         fontSize:13,
-        fontFamily:'Consolas',
+        fontFamily:'Consolas, courier-new, courier, monospace',
         //rendererType: 'dom',
     });
     widget.terminal = term;

@@ -6,6 +6,7 @@
 - Look into bug where terminal scroll bar seems to vanish sometimes until terminal is resized (likely related to the issue mentioned in the ui.js function createXTerm)
 - Look into bug where mcs.exe seems to alternate throwing an exception on each compile
 - Fix bug where you can't actually kill `dotnet load`
+- Reduce the number of assemblies fetched in `dotnet load`. We only need a small handful. Other assemblies could be fetched dynamically on `dotnet build`. This should reduce bandwith and speed up load time.
 
 ## Maybe...
 - Support gist.github.com
