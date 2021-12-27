@@ -30,7 +30,7 @@
         var webProjectRuntimeVersion = '6.0.1';
         
         <!--0.29.1 | https://www.jsdelivr.com/package/npm/monaco-editor-->
-        var locPath = window.location.origin + '/';
+        var locPath = window.location.origin + window.location.pathname;// TODO: Improve this...
         require.config({ paths: { 'vs': locPath + 'ui/monaco-editor/min/vs' }});
         let monacoProxy = URL.createObjectURL(new Blob([`
             self.MonacoEnvironment = {
