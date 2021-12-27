@@ -10,9 +10,9 @@ Code execution occurs via the [interpreter](https://github.com/dotnet/runtime/bl
 
 ## UI loading / initialization process
 
-![Alt text](pics/how-ui-loading.png)
-
 The initial page contains a simple `<div>` with the text `Loading...`
+
+![Alt text](pics/how-ui-loading.png)
 
 The Emscripten callback `Module.onRuntimeInitialized` is assigned and when invoked it does the following:
 

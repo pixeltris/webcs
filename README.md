@@ -4,7 +4,7 @@ Compile / run C# in a web browser (client side)
 
 Try it here https://pixeltris.github.io/webcs
 
-[Getting started](docs/GettingStarted.md) | [samples](/mono/managed/samples/) | [how it works](HowItWorks.md) | [related projects](docs/Resources.md)
+[Getting started](docs/GettingStarted.md) | [samples](/mono/managed/samples/) | [how it works](docs/HowItWorks.md) | [related projects](docs/Resources.md)
 
 ![Alt text](docs/pics/screenshot.png)
 
