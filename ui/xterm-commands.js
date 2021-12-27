@@ -1527,7 +1527,7 @@ class TerminalCommand_dotnet extends TerminalCommand {
                 this.process.controller.term.writeln('============');
                 this.process.controller.term.writeln('Getting started');
                 this.process.controller.term.writeln('============');
-                this.process.controller.term.writeln('dotnet load -q');
+                this.process.controller.term.writeln('dotnet load');
                 this.process.controller.term.writeln('dotnet new hello');
                 this.process.controller.term.writeln('dotnet build');
                 this.process.controller.term.writeln('hello.exe');
