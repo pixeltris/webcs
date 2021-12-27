@@ -7,7 +7,7 @@ See [samples](/mono/managed/samples/) and [how it works](HowItWorks.md).
 ## Hello world
 
 ```
-dotnet load -q
+dotnet load
 dotnet new hello
 dotnet build
 hello.exe
@@ -24,7 +24,7 @@ Process exiting
 
 To expand on this:
 
-- `dotnet load -q` load the .NET runtime ([Mono](https://github.com/dotnet/runtime/tree/main/src/mono/wasm)). `-q` loads quietly (no output).
+- `dotnet load` load the .NET runtime ([Mono](https://github.com/dotnet/runtime/tree/main/src/mono/wasm)).
 - `dotnet new hello` create a new folder named `hello`, `cd` into it, create `hello.csproj` / `Program.cs`.
 - `dotnet build` search for a `.csproj` with the current folder name (`hello.csproj`) and compile using [roslyn](https://github.com/dotnet/roslyn).
 - `hello.exe` search for `hello.exe` and run via `dotnet hello.exe [ARGS]` (`Assembly.Load` and invoke `WebcsMain`).
