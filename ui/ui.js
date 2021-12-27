@@ -21,14 +21,136 @@ var contextMenuCloserToMouse = true;
 var useTooltipOnTabs = true;
 var gTooltip = null;
 var dockInstance = null;
-var recentTabs = [];
 var activeThemeName = null;
 var baseDocumentTitle = document.title;
+var nextTerminalId = 1;
+var nextTabId = 1;
+var widgetsByTabId = new Map();
 
-const TabType_CustomContent = 1;
-const TabType_Terminal = 2;
-const TabType_TextEditor = 3;
-const TabType_MarkdownViewer = 4;
+const TabType_Terminal = 1;
+const TabType_TextEditor = 2;
+
+function uiTerminalWriteLine(tabId, str) {
+    var widget = widgetsByTabId.get(tabId);
+    if (widget && widget.tabType == TabType_Terminal) {
+        var controller = getTerminalController(widget);
+        if (controller != null) {
+            controller.println(str);
+        }
+    }
+}
+
+function uiCloseTab(tabId) {
+    var widget = widgetsByTabId.get(tabId);
+    if (widget) {
+        widget.close();
+    }
+}
+
+function uiSetTabTitle(tabId, title) {
+    var widget = widgetsByTabId.get(tabId);
+    if (widget) {
+        widget.title.text = title;
+    }
+}
+
+function uiGetTabTitle(tabId) {
+    var widget = widgetsByTabId.get(tabId);
+    if (widget) {
+        return widget.title.text;
+    }
+    return '';
+}
+
+function uiGetActiveTabId() {
+    var widgets = getWidgetsByVisitTime(dockInstance.layout);
+    if (widgets.length > 0) {
+        return widgets[0].tabId;
+    }
+    return 0;
+}
+
+function uiGetTabWorkingDirectory(tabId) {
+    var widget = widgetsByTabId.get(tabId);
+    if (widget && widget.tabType == TabType_Terminal) {
+        var controller = getTerminalController(widget);
+        if (controller != null) {
+            return controller.workingDirectory;
+        }
+    }
+    return '';
+}
+
+function uiGetAssemblyOffsetSize(name) {
+    var fi = WebcsInterop.allFilesByName[name];
+    if (fi) {
+        return fi.offset + ',' + fi.size;
+    }
+    return 0;
+}
+
+function uiGetProcessById(processId) {
+    var widgets = getWidgets(dockInstance.layout);
+    for (var i = 0; i < widgets.length; i++) {
+        var widget = widgets[i];
+        if (widget.tabType == TabType_Terminal) {
+            var controller = getTerminalController(widget);
+            if (controller != null) {
+                if (controller._activeProcess != null && controller._activeProcess.id == processId) {
+                    return controller._activeProcess;
+                }
+            }
+        }
+    }
+    return null;
+}
+
+function uiProcessExit(processId, exitCode) {
+    var process = uiGetProcessById(processId);
+    if (process != null) {
+        process.exit(exitCode);
+    }
+}
+
+function uiProcessKill(processId) {
+    var process = uiGetProcessById(processId);
+    if (process != null) {
+        process.kill();
+    }
+}
+
+function uiProcessReadLine(processId, promptText) {
+    if (!WebcsInterop.webcsOnReadLine) {
+        return;
+    }
+    var process = uiGetProcessById(processId);
+    if (process != null) {
+        if (!promptText) {
+            promptText = '';//promptText = 'TODO: fetch prompt from current output';
+        }
+        process.controller.read(promptText).then(str => {
+            WebcsInterop.webcsOnReadLine(process.controller.widget.tabId, processId, str);
+        });
+    }
+}
+
+function getUniqueTerminalName() {
+    return 'Term' + (nextTerminalId++);
+}
+
+function getDefaultTerminalName() {
+    return 'Term';//getUniqueTerminalName();
+}
+
+function getTerminalController(widget) {
+    var addons = widget.terminal._addonManager._addons;
+    for (var i = 0; i < addons.length; i++) {
+        if (!addons[i].isDisposed && addons[i].instance.constructor.name == 'TerminalController') {
+            return addons[i].instance;
+        }
+    }
+    return null;
+}
 
 function clientViewportRect() {
 	var elem = document.documentElement;
@@ -65,6 +187,7 @@ function focusWidget(widget) {
     var tabBar = getTabBarFromWidget(widget);
     if (tabBar != null) {
         tabBar.currentItem = widget;
+        onFocusWidget(dockInstance.layout, widget);
     }
 }
 
@@ -85,8 +208,8 @@ function onFocusWidget(layout, targetWidget) {
 	while (widgetsToVisit.length > 0) {
 		var widget = widgetsToVisit[0];
 		switch (widget.constructor.name) {
-			case "StackedLayout":
-			case "DockSplitPanel":
+			case 'StackedLayout':
+			case 'DockSplitPanel':
 				var children = widget._children ? widget._children : widget.layout ? widget.layout._children : null;
 				if (children) {
 					for (var i = 0; i < children.length; i++) {
@@ -98,7 +221,7 @@ function onFocusWidget(layout, targetWidget) {
 					}
 				}
 				break;
-			case "DockTabPanel":
+			case 'DockTabPanel':
 				var tabBar = widget._tabBar;
 				if (!tabBars.includes(tabBar)) {
 					tabBars.push(tabBar);
@@ -149,8 +272,8 @@ function getWidgets(layout, tabType/*optional*/, name/*optional*/, tabTag/*optio
 	while (widgetsToVisit.length > 0) {
 		var widget = widgetsToVisit[0];
 		switch (widget.constructor.name) {
-			case "StackedLayout":
-			case "DockSplitPanel":
+			case 'StackedLayout':
+			case 'DockSplitPanel':
 				var children = widget._children ? widget._children : widget.layout ? widget.layout._children : null;
 				if (children) {
 					for (var i = 0; i < children.length; i++) {
@@ -162,7 +285,7 @@ function getWidgets(layout, tabType/*optional*/, name/*optional*/, tabTag/*optio
 					}
 				}
 				break;
-			case "DockTabPanel":
+			case 'DockTabPanel':
 				var tabBar = widget._tabBar;
 				if (!tabBars.includes(tabBar)) {
 					tabBars.push(tabBar);
@@ -189,13 +312,27 @@ function getWidgets(layout, tabType/*optional*/, name/*optional*/, tabTag/*optio
 	return widgets;
 }
 
-function createTextEditor(widget) {
-    require(["vs/editor/editor.main"], function () {
+function createTextEditor(widget, options) {
+    var lang = '';
+    var textStr = '';
+    if (options != null && options.filePath != null) {
+        try {
+            textStr = FS.readFile(options.filePath, { encoding: 'utf8' });
+        } catch {}
+        var dotIndex = options.filePath.lastIndexOf('.');
+        if (dotIndex > 0) {
+            lang = options.filePath.substring(dotIndex + 1).trim().toLowerCase();
+            switch (lang) {
+                case 'cs': lang = 'csharp'; break;
+                case 'csproj': lang = 'xml'; break;
+                case 'md': lang = 'markdown'; break;
+            }
+        }
+    }
+    require(['vs/editor/editor.main'], function () {
         let editor = monaco.editor.create(widget.node, {
-            value: [
-                'using System;'
-            ].join('\n'),
-            language: 'csharp',
+            value: textStr,
+            language: lang,
             theme: 'vs',
             automaticLayout: true
         });
@@ -214,19 +351,46 @@ function createTextEditor(widget) {
             }
             editor.focus();
         };
+        editor.getModel().onDidChangeContent((event) => {
+            if (!widget.isFileModified) {
+                widget.title.text += '*';
+                widget.isFileModified = true;
+                //focusWidget(widget);
+            }
+        });
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, function() {
+            miWidgetSaveFile(widget);
+        });
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_Q, function() {
+            widget.close();
+        });
         widget.monaco = editor;
+        widget.isFileModified = false;
+        if (options != null) {
+            widget.filePath = options.filePath;
+            editor.focus();
+        }
         setThemeMonaco(widget);
     });
 }
 
-function createXTerm(widget) {
+function showTerminalHelp(term) {
+    term.writeln(webProjectName + ' ' + webProjectVersion);
+    term.writeln(webProjectRepoUrl);
+    term.writeln('');
+    term.writeln('See the link above or `dotnet help`');
+    term.writeln('');
+}
+
+function createXTerm(widget, options) {
     var fitAddon = new FitAddon.FitAddon();
     var term = new Terminal({
         fontSize:13,
         fontFamily:'Consolas',
-        //rendererType: 'dom'
+        //rendererType: 'dom',
     });
     widget.terminal = term;
+    term.uiWidget = widget;
     setThemeXTerm(widget);
     term.loadAddon(fitAddon);
     term.open(widget.node);
@@ -240,36 +404,24 @@ function createXTerm(widget) {
         // This isn't really documented anywhere? Is this the correct way to listen for focus?
         onFocusWidget(dockInstance.layout, widget);
     });
-    fitAddon.fit();
-    term._initialized = true;
-    term.prompt = () => {
-        term.write('\r\n$ ');
-    };
-    term.writeln('Welcome to xterm.js');
-    term.writeln('This is a local terminal emulation, without a real terminal in the back-end.');
-    term.writeln('Type some keys and commands to play around.');
-    term.writeln('');
-    nl(term);
-    term.onData(e => {
-      switch (e) {
-        case '\r': // Enter
-        case '\u0003': // Ctrl+C
-          nl(term);
-          break;
-        case '\u007F': // Backspace (DEL)
-          // Do not delete the prompt
-          if (term._core.buffer.x > 2) {
-            term.write('\b \b');
-          }
-          break;
-        default: // Print all other characters for demo
-          term.write(e);
-      }
-    });
-    function nl(term) {
-        term.write('\r\n$ ');
+    if (options != null && options.showTerminalHelp) {
+        showTerminalHelp(term);
     }
-    //widget.node.style.backgroundColor = "#000";
+
+    var controller = new TerminalController();
+    controller.workingDirectory = options != null && options.path ? options.path : '/';
+    controller.widget = widget;
+    widget.onCloseRequestConfirm = widget.onCloseRequest;
+    widget.onCloseRequest = function(msg) {
+        controller.onClose();
+        widget.onCloseRequestConfirm(msg);
+    };
+    term.loadAddon(controller);
+    controller.runReadLoop();
+    
+    // Doing this as a timeout as there's some bug calling fit directly (even after making sure widget is added to dock instance)
+    // NOTE: Also some bug in firefox where terminal doesn't render on low timeouts? wtf?
+    setTimeout(function() { fitAddon.fit(); }, 100);
 }
 
 function setWidgetFocusHandler(widget) {
@@ -284,42 +436,9 @@ function setWidgetFocusHandler(widget) {
     };
 }
 
-function createCustomContent(widget, options) {
-    setThemeCustomContent(widget);
-    setWidgetFocusHandler(widget);
-    if (options && options.script) {
-        require(['ui/content/' + options.script], function(content) {
-            widget.customContent = content;
-            if (content.onCloseRequest) {
-                widget.onCloseRequestConfirm = widget.onCloseRequest;
-                widget.onCloseRequest = function(msg) {
-                    content.onCloseRequest(widget, function(targetWidget) {
-                        targetWidget.onCloseRequestConfirm(msg);
-                    });
-                };
-            }
-            content.onCreated(widget, options);
-        });
-    }
-}
-
-function createMarkdownViewer(widget) {
-    var md = window.markdownit();
-    var result = md.render(`hello  
-# markdown-it rulezz!
-This is a test  
-*Italic*  
-**Bold**  
-- __[pica](https://nodeca.github.io/pica/demo/)__ - high quality and fast image`);
-    widget.node.innerHTML = result;
-    widget.addClass('markdown-body');
-    setThemeMarkdown(widget);
-    setWidgetFocusHandler(widget);
-}
-
 function createContent(title, tabType, options) {
     if (!tabType) {
-        tabType = TabType_CustomContent;
+        tabType = TabType_Terminal;
     }
     var widget = new libUI.Widget();
     widget.addClass('content');
@@ -329,24 +448,28 @@ function createContent(title, tabType, options) {
     widget.title.closable = true;
 	widget.tabType = tabType;
     widget.tabTag = null;
+    widget.tabId = nextTabId++;
 	//widget.node.style.overflow = 'auto';
     widget.onContextMenu = function(event) {
         openMainContextMenu(event, widget);
     };
 	switch (tabType) {
-        case TabType_CustomContent:
-            createCustomContent(widget, options);
-            break;
 		case TabType_Terminal:
-			createXTerm(widget);
+			createXTerm(widget, options);
 			break;
 		case TabType_TextEditor:
-            createTextEditor(widget);
+            createTextEditor(widget, options);
 			break;
-        case TabType_MarkdownViewer:
-            createMarkdownViewer(widget);
-            break;
 	}
+    widgetsByTabId.set(widget.tabId, widget);
+    widget.onCloseRequestOriginalForRemoveTabId = widget.onCloseRequest;
+    widget.onCloseRequest = function(msg) {
+        widgetsByTabId.delete(widget.tabId);
+        widget.onCloseRequestOriginalForRemoveTabId(msg);
+        if (WebcsInterop.webcsOnTabClosed) {
+            WebcsInterop.webcsOnTabClosed(widget.tabId);
+        }
+    };
     return widget;
 }
 
@@ -354,97 +477,198 @@ function createContent(title, tabType, options) {
 // BEGIN MenuItem handlers
 ///////////////////////////////////////////////////////
 
-function miOpenBaseTerminal() {
-    
-}
-
-function miOpenNewTerminal() {
-    var widgets = getWidgets(dockInstance.layout);
-    //var widget = createContent('/', TabType_Terminal);
-    //console.log(dockInstance);
-    //debugger;
-    //dockInstance.insertTabAfter(r9, r2);
+function miOpenNewTerminal(item) {
+    var widget = createContent(getDefaultTerminalName(), TabType_Terminal, { showTerminalHelp: getWidgets(dockInstance.layout).length == 0 });
+    if (dockInstance.focusedWidget != null) {
+        dockInstance.insertTabAfter(widget, dockInstance.focusedWidget);
+    } else {
+        dockInstance.insertTabAfter(widget);
+    }
+    focusWidget(widget);
 }
 
 function miTabFocus(item) {
     focusWidget(item.widget);
 }
 
-function miTabCloseAll() {
+function miTabCloseAll(item) {
+    var widgets = getWidgets(dockInstance.layout);
+    for (var i = 0; i < widgets.length; i++) {
+        widgets[i].close();
+    }
 }
 
 function miTabClose(item) {
-    
+    if (item.widget != null) {
+        item.widget.close();
+    }
 }
 
 function miTabCloseTabGroup(item) {
-    
+    if (item.widget != null) {
+        var tabBar = getTabBarFromWidget(item.widget);
+        var items = tabBar._items.slice();
+        for (var i = 0; i < items.length; i++) {
+            var widget = items[i];
+            widget.close();
+        }
+    }
 }
 
 function miTabCloseAllButThisInTabGroup(item) {
+    if (item.widget != null) {
+        var tabBar = getTabBarFromWidget(item.widget);
+        var items = tabBar._items.slice();
+        for (var i = 0; i < items.length; i++) {
+            var widget = items[i];
+            if (widget != item.widget) {
+                widget.close();
+            }
+        }
+    }
 }
 
 function miTabCloseAllButThisEverywhere(item) {
+    var widgets = getWidgets(dockInstance.layout);
+    for (var i = 0; i < widgets.length; i++) {
+        if (widgets[i] != item.widget) {
+            widgets[i].close();
+        }
+    }
+}
+
+function miTabCloseAllButThisEverywhereKeepGroup(item) {
+    if (item.widget != null) {
+        var tabGroup = getTabBarFromWidget(item.widget);
+        var widgets = getWidgets(dockInstance.layout);
+        for (var i = 0; i < widgets.length; i++) {
+            if (getTabBarFromWidget(widgets[i]) != tabGroup) {
+                widgets[i].close();
+            }
+        }
+    }
 }
 
 function miTabCopyFullPath(item) {
-    
+    if (navigator.clipboard != null && item.widget != null) {
+        if (item.widget.tabType == TabType_TextEditor && item.widget.filePath != null) {
+            navigator.clipboard.writeText(item.widget.filePath);
+        } else if (item.widget.tabType == TabType_Terminal) {
+            var controller = getTerminalController(item.widget);
+            if (controller != null) {
+                navigator.clipboard.writeText(controller.workingDirectory);
+            }
+        }
+    }
 }
 
-function miOpenNewTerminalAtThisPath(item) {
-}
-
-function miTerminalCopyBuffer(item) {
+function miTerminalCopyBuffer(item, copyFullBuffer) {
+    if (navigator.clipboard != null && item.widget != null && item.widget.terminal != null) {
+        var buffer = item.widget.terminal.buffer.active;
+        var str = '';
+        var begin = 0;
+        var end = buffer.length;
+        if (copyFullBuffer) {
+            begin = buffer._buffer.ydisp;
+            end = begin + buffer._buffer._rows;
+        }
+        for (var i = begin; i < end; i++) {
+            var line = buffer._buffer.lines._array[i];
+            var lineText = buffer._buffer.translateBufferLineToString(i, true);
+            if (str && !line.isWrapped) {
+                str += '\n';
+            }
+            str += lineText;
+        }
+        while (str.endsWith('\n')) {
+            str = str.substring(0, str.length - 1);
+        }
+        navigator.clipboard.writeText(str);
+    }
 }
 
 function miTerminalCopyBufferVisibleOnly(item) {
+    miTerminalCopyBuffer(item, true);
+}
+
+function miClearScreenOrReset(item, clearScreen, reset) {
+    if (item.widget != null && item.widget.terminal != null) {
+        var controller = getTerminalController(item.widget);
+        if (controller != null) {
+            if (clearScreen) {
+                controller.scClearScreen();
+            } else {
+                controller.scReset();
+            }
+        }
+    }
 }
 
 function miTerminalClear(item) {
-    // "clear" terminal command
+    miClearScreenOrReset(item, true, false);
 }
 
 function miTerminalReset(item) {
-    // "reset" terminal command
+    miClearScreenOrReset(item, false, true);
+}
+
+function miWidgetSaveFile(widget) {
+    if (widget.monaco != null && widget.filePath != null) {
+        if (widget.isFileModified) {
+            try {
+                FS.writeFile(widget.filePath, widget.monaco.getValue());
+            } catch {}
+            widget.isFileModified = false;
+            widget.title.text = widget.title.text.substring(0, widget.title.text.length - 1);
+        }
+    }
 }
 
 function miTabSaveFile(item) {
-    
-}
-
-function miTabSaveFileAs(item) {
-    
+    if (item.widget != null) {
+        miWidgetSaveFile(widget);
+    }
 }
 
 function miTabSaveFileAllInTabGroup(item) {
-    
+    if (item.widget != null) {
+        var tabBar = getTabBarFromWidget(item.widget);
+        for (var i = 0; i < tabBar._items.length; i++) {
+            var widget = tabBar._items[i];
+            if (widget.tabType == TabType_TextEditor) {
+                miWidgetSaveFile(widget);
+            }
+        }
+    }
 }
 
 function miTabSaveFileAll(item) {
+    var widgets = getWidgets(dockInstance.layout);
+    for (var i = 0; i < widgets.length; i++) {
+        var widget = widgets[i];
+        if (widget.tabType == TabType_TextEditor) {
+            miWidgetSaveFile(widget);
+        }
+    }
 }
 
 function miTabReloadFile(item) {
-    
+    if (item.widget != null && item.widget.monaco != null && item.widget.filePath != null) {
+        try {
+            var str = FS.readFile(item.widget.filePath, { encoding: 'utf8' });
+            item.widget.monaco.setValue(str);
+            if (item.widget.isFileModified) {
+                item.widget.isFileModified = false;
+                item.widget.title.text = item.widget.title.text.substring(0, item.widget.title.text.length - 1);
+            }
+        } catch {}
+    }
 }
 
 function openMainContextMenu(event, tabRef) {
     event.preventDefault();
-    var tabsMenuItems = [];
     var widgets = getWidgetsByVisitTime(dockInstance.layout);
-    for (var i = 0; i < widgets.length; i++) {
-        tabsMenuItems.push(new libMenus.MenuItem({
-            text: widgets[i].title.text,
-            icon: dockInstance.focusedWidget == widgets[i] ? 'fas fa-minus' : '',
-            handler: miTabFocus,
-            widget: widgets[i]
-        }));
-    }
     var menuItems = [
-        new libMenus.MenuItem({
-            text: 'Base terminal',
-            //shortcut: 'Ctrl+B',
-            handler: miOpenBaseTerminal
-        }),
         new libMenus.MenuItem({
             text: 'New terminal',
             //shortcut: 'Ctrl+N',
@@ -453,13 +677,55 @@ function openMainContextMenu(event, tabRef) {
     ];
     if (widgets.length > 0) {
         // Only add the tabs/close tabs if there are any tabs to view/close...
+        var tabsMenuItems = [];
+        for (var i = 0; i < widgets.length; i++) {
+            tabsMenuItems.push(new libMenus.MenuItem({
+                text: widgets[i].title.text,
+                icon: dockInstance.focusedWidget == widgets[i] ? 'fas fa-minus' : '',
+                handler: miTabFocus,
+                widget: widgets[i]
+            }));
+        }
         menuItems.push(new libMenus.MenuItem({
             text: 'Tabs',
             submenu: new libMenus.Menu(tabsMenuItems)
         }));
+        var closeTabsMenuItems = [];
+        if (tabRef != null) {
+            closeTabsMenuItems.push(new libMenus.MenuItem({
+                text: 'This tab',
+                handler: miTabClose,
+                widget: tabRef
+            }));
+            closeTabsMenuItems.push(new libMenus.MenuItem({
+                text: 'This tab group',
+                handler: miTabCloseTabGroup,
+                widget: tabRef
+            }));
+            closeTabsMenuItems.push(new libMenus.MenuItem({
+                text: 'All but this tab',
+                handler: miTabCloseAllButThisEverywhere,
+                widget: tabRef
+            }));
+            closeTabsMenuItems.push(new libMenus.MenuItem({
+                text: 'All but this tab group',
+                handler: miTabCloseAllButThisEverywhereKeepGroup,
+                widget: tabRef
+            }));
+            closeTabsMenuItems.push(new libMenus.MenuItem({
+                text: 'All but this tab (in tab group)',
+                handler: miTabCloseAllButThisInTabGroup,
+                widget: tabRef
+            }));
+        }
+        closeTabsMenuItems.push(new libMenus.MenuItem({
+            text: 'All',
+            handler: miTabCloseAll,
+            widget: tabRef
+        }));
         menuItems.push(new libMenus.MenuItem({
-            text: 'Close all tabs',
-            handler: miTabCloseAll
+            text: 'Close',
+            submenu: new libMenus.Menu(closeTabsMenuItems)
         }));
     }
     if (tabRef) {
@@ -467,37 +733,9 @@ function openMainContextMenu(event, tabRef) {
             type: libMenus.MenuItem.Separator
         }));
         menuItems.push(new libMenus.MenuItem({
-            text: 'Close',
-            handler: miTabClose,
-            tab: tabRef
-        }));
-        menuItems.push(new libMenus.MenuItem({
-            text: 'Close tab group',
-            handler: miTabCloseTabGroup,
-            tab: tabRef
-        }));
-        menuItems.push(new libMenus.MenuItem({
-            text: 'Close all but this (in tab group)',
-            handler: miTabCloseAllButThisInTabGroup,
-            tab: tabRef
-        }));
-        menuItems.push(new libMenus.MenuItem({
-            text: 'Close all but this (everywhere)',
-            handler: miTabCloseAllButThisEverywhere,
-            tab: tabRef
-        }));
-        menuItems.push(new libMenus.MenuItem({
-            type: libMenus.MenuItem.Separator
-        }));
-        menuItems.push(new libMenus.MenuItem({
             text: 'Copy full path',
             handler: miTabCopyFullPath,
-            tab: tabRef
-        }));
-        menuItems.push(new libMenus.MenuItem({
-            text: 'New terminal at this path',
-            handler: miOpenNewTerminalAtThisPath,
-            tab: tabRef
+            widget: tabRef
         }));
         if (tabRef.tabType == TabType_Terminal) {
             menuItems.push(new libMenus.MenuItem({
@@ -506,22 +744,22 @@ function openMainContextMenu(event, tabRef) {
             menuItems.push(new libMenus.MenuItem({
                 text: 'Copy buffer',
                 handler: miTerminalCopyBuffer,
-                tab: tabRef
+                widget: tabRef
             }));
             menuItems.push(new libMenus.MenuItem({
                 text: 'Copy visible buffer',
                 handler: miTerminalCopyBufferVisibleOnly,
-                tab: tabRef
+                widget: tabRef
             }));
             menuItems.push(new libMenus.MenuItem({
                 text: 'Clear',
                 handler: miTerminalClear,
-                tab: tabRef
+                widget: tabRef
             }));
             menuItems.push(new libMenus.MenuItem({
                 text: 'Reset',
                 handler: miTerminalReset,
-                tab: tabRef
+                widget: tabRef
             }));
         }
         if (tabRef.tabType == TabType_TextEditor) {
@@ -532,32 +770,23 @@ function openMainContextMenu(event, tabRef) {
                 text: 'Save',
                 shortcut: 'Ctrl+S',
                 handler: miTabSaveFile,
-                tab: tabRef
-            }));
-            menuItems.push(new libMenus.MenuItem({
-                text: 'Save as...',
-                shortcut: 'Ctrl+Alt+S',
-                handler: miTabSaveFileAs,
-                tab: tabRef
+                widget: tabRef
             }));
             menuItems.push(new libMenus.MenuItem({
                 text: 'Save All (in tab group)',
                 handler: miTabSaveFileAllInTabGroup,
-                tab: tabRef
+                widget: tabRef
             }));
             menuItems.push(new libMenus.MenuItem({
                 text: 'Save All (everywhere)',
                 handler: miTabSaveFileAll,
-                tab: tabRef
-            }));
-            menuItems.push(new libMenus.MenuItem({
-                type: libMenus.MenuItem.Separator
+                widget: tabRef
             }));
             menuItems.push(new libMenus.MenuItem({
                 text: 'Reload',
-                shortcut: 'Ctrl+Alt+R',
+                //shortcut: 'Ctrl+Alt+R',
                 handler: miTabReloadFile,
-                tab: tabRef
+                widget: tabRef
             }));
         }
     }
@@ -579,19 +808,6 @@ function setThemeShared(widget) {
 
 function setThemeMonaco(widget) {
     widget.monaco._themeService.setTheme(themeThemes[activeThemeName].monaco);
-}
-
-function setThemeCustomContent(widget) {
-    setThemeShared(widget);
-}
-
-function setThemeMarkdown(widget) {
-    setThemeShared(widget);
-    widget.node.style.backgroundColor = markdownThemes[themeThemes[activeThemeName].markdown].background;
-    widget.node.style.padding = '5px';
-    widget.node.style.userSelect = 'text';
-    widget.node.style.cursor = 'auto';
-    widget.node.style.overflow = 'auto';
 }
 
 function setThemeXTerm(widget) {
@@ -620,10 +836,8 @@ function setTheme(themeName) {
     }
     if (theme) {
         activeThemeName = themeName;
-        setThemeCss('markdown-theme', markdownThemesUrls, theme.markdown);
         setThemeCss('phosphor-dockpanel-theme', phosphorDockpanelThemeUrls, theme.phosphorDockpanel);
         setThemeCss('phosphor-menu-theme', phosphorMenuThemeUrls, theme.phosphorMenu);
-        setThemeCss('toastr-theme', toastrThemeUrls, theme.toastr);
         setThemeShared();
         if (dockInstance == null) {
             return;
@@ -632,14 +846,8 @@ function setTheme(themeName) {
         for (var i = 0; i < widgets.length; i++) {
             var widget = widgets[i];
             switch (widget.tabType) {
-                case TabType_CustomContent:
-                    setThemeCustomContent(widget);
-                    break;
                 case TabType_Terminal:
                     setThemeXTerm(widget);
-                    break;
-                case TabType_MarkdownViewer:
-                    setThemeMarkdown(widget);
                     break;
                 case TabType_TextEditor:
                     setThemeMonaco(widget);
@@ -649,7 +857,15 @@ function setTheme(themeName) {
     }
 }
 
-function main() {
+function getWebProjectRepoUrl() {
+    return webProjectRepoUrl;
+}
+
+function getWebProjectRepoUrlForFile(path, branch) {
+    return getWebProjectRepoUrl() + '/' + (branch || webProjectRepoDefaultBranch) + '/' + path;
+}
+
+function initUI() {
     document.getElementById('pageLoadingDiv').remove();
     document.body.onkeydown = function(event) {
         // Prevent unintuitive key presses on body focus (such as tab)
@@ -664,42 +880,31 @@ function main() {
             openMainContextMenu(event);
         }
     };
-    var r2 = createContent('Files', TabType_TextEditor);
-	var r9 = createContent('Files(2)', TabType_TextEditor);
-    var r3 = createContent('Red', TabType_Terminal);
-    var b1 = createContent('Blue', TabType_Terminal);
-    var b2 = createContent('Blue', TabType_Terminal);
-    var g1 = createContent('GreenGreen', TabType_CustomContent, { script: 'example.js', description: 'GreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreenGreen' });
-    var g2 = createContent('Green', TabType_MarkdownViewer);
-    var g3 = createContent('Green');
-    var y1 = createContent('Hex', '');
-    var y2 = createContent('Yellow', TabType_CustomContent, { script: 'example.js' });
+    var term1 = createContent('Term', TabType_Terminal, { showTerminalHelp: true });
+    var term2 = createContent('Term', TabType_Terminal, { showTerminalHelp: true });
     dockInstance = new libUI.DockPanel();
     dockInstance.useAltTextOnTabs = true;
     dockInstance.focusedWidget = null;
     dockInstance.id = 'main';
-    dockInstance.insertRight(b1);
-    dockInstance.insertBottom(y1, b1);
-    dockInstance.insertLeft(g1, y1);
-    dockInstance.insertBottom(b2);
-    dockInstance.insertTabBefore(g2, b2);
-    dockInstance.insertTabBefore(y2, g2);
-    dockInstance.insertTabBefore(g3, y2);
-    dockInstance.insertTabBefore(r2, b1);
-	dockInstance.insertTabAfter(r9, r2);
-    dockInstance.insertTabBefore(r3, y1);
+    //dockInstance.insertTop(term1);
+    //dockInstance.insertBottom(term2, term1);
+    dockInstance.insertLeft(term1);
+    dockInstance.insertRight(term2, term1);
     dockInstance.onContextMenu = openMainContextMenu;
     dockInstance.onTabBarUpdated = function(tabBar) {
         // If the focused widget belongs to the closed tab bar then focus the most recently visited widget
+        if (getWidgets(dockInstance.layout).length == 0) {
+            dockInstance.focusedWidget = null;
+        }
         if (tabBar._items.length == 0 && (dockInstance.focusedWidget == null || dockInstance.focusedWidget.parent.parent.tabBar == tabBar)) {
             focusMostRecentWidget();
         }
     };
     dockInstance.attach(document.body);
-    focusMostRecentWidget();
+    focusWidget(term1);//focusMostRecentWidget();
 	
 	var tooltip = document.createElement('div');
-	tooltip.className = "p-Tooltip";
+	tooltip.className = 'p-Tooltip';
 	tooltip.borderPadding = 20;// Padding for the entire window (for really long tooltips)
 	tooltip.xOffset = 0;
 	tooltip.yOffset = 24;

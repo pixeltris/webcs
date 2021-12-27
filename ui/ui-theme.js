@@ -3,10 +3,7 @@
 // The base phosphor css files are the "-light.css" files.
 // Modifications in the other css files are flagged with "THEMED"
 
-// NOTE: Look at index.html for urls which are achieved by .css swapping (they're there to keep urls in a central place)
-
-// Some things that might be worth moving / look into:
-// - ui.js setThemeMarkdown some style values set there
+// Some related functions:
 // - ui.js createTextEditor (monaco) ~ custom registering of themes
 // - ui.js createXTerm font family / size / rendererType
 
@@ -20,21 +17,17 @@ var themeThemeWidgetBgColorLight = themeThemeLightBg;
 var themeThemes = [];
 themeThemes['dark'] = {
     xterm: 'dark',
-    markdown: 'dark',
     monaco: 'vs-dark',
     shared: 'dark',
     phosphorDockpanel: 'dark',
     phosphorMenu: 'dark',
-    toastr: 'dark',
 };
 themeThemes['light'] = {
     xterm: 'light',
-    markdown: 'light',
     monaco: 'vs',
     shared: 'light',
     phosphorDockpanel: 'light',
     phosphorMenu: 'light',
-    toastr: 'light',
 };
 
 // NOTE: Keep 'default' up to date with https://github.com/xtermjs/xterm.js/blob/master/src/browser/ColorManager.ts
@@ -154,10 +147,10 @@ sharedThemes['light'] = {
     widgetBackground: themeThemeWidgetBgColorLight
 };
 
-var markdownThemes = [];
-markdownThemes['dark'] = {
-    background: themeThemeDarkBg
-};
-markdownThemes['light'] = {
-    background: themeThemeLightBg
-};
+var phosphorDockpanelThemeUrls = new Map();
+phosphorDockpanelThemeUrls.set('dark', 'ui/phosphor-dockpanel-dark.css');
+phosphorDockpanelThemeUrls.set('light', 'ui/phosphor-dockpanel-light.css');
+var phosphorMenuThemeUrls = new Map();
+phosphorMenuThemeUrls.set('dark', 'ui/phosphor-menu-dark.css');
+phosphorMenuThemeUrls.set('light', 'ui/phosphor-menu-light.css');
+setTheme('dark');

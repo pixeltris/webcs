@@ -1,91 +1,57 @@
 <html>
-	<meta charset="utf-8"/>
+    <meta charset="utf-8"/>
     <title>webcs</title>
-    <!--TODO: Add integrity to the script tags and fetch requests (dlls, etc)?-->
-    <!--NOTE: Some file names here have been modified to include the version number. Follow urls to check for new versions.-->
-    <link rel="stylesheet" type="text/css" href="ui/font-awesome-4.7.0/css/font-awesome.min.css"><!--https://fontawesome.com/v4.7.0/get-started/-->
-	<link rel="stylesheet" type="text/css" href="ui/phosphor-dockpanel-dark.css" id="phosphor-dockpanel-theme">
+    <link rel="stylesheet" type="text/css" href="ui/font-awesome/css/font-awesome.min.css"><!--4.7.0 | https://fontawesome.com/v4.7.0/get-started/-->
+    <link rel="stylesheet" type="text/css" href="ui/phosphor-dockpanel-dark.css" id="phosphor-dockpanel-theme">
     <link rel="stylesheet" type="text/css" href="ui/phosphor-menu-dark.css" id="phosphor-menu-theme">
-    <link rel="stylesheet" type="text/css" href="" id="markdown-theme">
-    <link rel="stylesheet" type="text/css" href="ui/xterm-4.10.0.css"><!--https://www.jsdelivr.com/package/npm/xterm-->
-    <script type="text/javascript" src="ui/xterm-4.10.0.js"></script><!--https://www.jsdelivr.com/package/npm/xterm-->
-    <script type="text/javascript" src="ui/xterm-addon-fit-0.5.0.js"></script><!--https://www.jsdelivr.com/package/npm/xterm-addon-fit-->
-    <script type="text/javascript" src="ui/markdown-it-12.0.4.min.js"></script><!--https://www.jsdelivr.com/package/npm/markdown-it?path=dist-->
-    <script type="text/javascript" src="ui/forge-0.10.0.min.js"></script><!--https://www.jsdelivr.com/package/npm/node-forge?path=dist-->
-    <script type="text/javascript" src="ui/require-2.3.6.min.js"></script><!--https://requirejs.org/docs/download.html-->
+    <link rel="stylesheet" type="text/css" href="ui/xterm.css"><!--4.10.0 | https://www.jsdelivr.com/package/npm/xterm-->
+    <script type="text/javascript" src="ui/xterm.js"></script><!--4.10.0 | https://www.jsdelivr.com/package/npm/xterm-->
+    <script type="text/javascript" src="ui/xterm-addon-fit.js"></script><!--0.5.0 | https://www.jsdelivr.com/package/npm/xterm-addon-fit-->
+    <script type="text/javascript" src="ui/xterm-controller.js"></script>
+    <script type="text/javascript" src="ui/xterm-commands.js"></script>
+    <script type="text/javascript" src="ui/jszip.min.js"></script><!--3.7.1 | https://github.com/Stuk/jszip/blob/master/dist/jszip.min.js-->
+    <script type="text/javascript" src="ui/require.min.js"></script><!--2.3.6 | https://requirejs.org/docs/download.html-->
     <script type="text/javascript" src="ui/phosphor-dockpanel-menu.js"></script><!--https://phosphorjs.github.io/examples/dockpanel/bundle.js + https://phosphorjs.github.io/examples/menus/bundle.js (see https://phosphorjs.github.io/examples.html)-->
+    <script type="text/javascript" src="ui/ui.js"></script>
     <script type="text/javascript" src="ui/ui-theme.js"></script>
-	<script type="text/javascript" src="ui/ui.js"></script>
-    <script async type="text/javascript" src="mono/dotnet.js"></script><!--https://github.com/mono/mono/blob/master/sdks/wasm/docs/getting-started/obtain-wasm-sdk.md-->
-    <script async type="text/javascript" src="mono/dotnet-extra.js"></script>
+    <script async type="text/javascript" src="mono/dotnet.js"></script><!--/mono/README.md-->
+    <script type="text/javascript" src="mono/dotnet-extra.js"></script>
     <script>
-        var markdownThemesUrls = new Map();
-        markdownThemesUrls.set('dark', 'ui/github-markdown-dark.css');<!--https://mrdrivingduck.cn/github-markdown-css/github-markdown-dark.css (fetched 11th feb 2021)-->
-        markdownThemesUrls.set('light', 'ui/github-markdown-light-4.0.0.min.css');<!--https://cdnjs.com/libraries/github-markdown-css-->
-        var phosphorDockpanelThemeUrls = new Map();
-        phosphorDockpanelThemeUrls.set('dark', 'ui/phosphor-dockpanel-dark.css');
-        phosphorDockpanelThemeUrls.set('light', 'ui/phosphor-dockpanel-light.css');
-        var phosphorMenuThemeUrls = new Map();
-        phosphorMenuThemeUrls.set('dark', 'ui/phosphor-menu-dark.css');
-        phosphorMenuThemeUrls.set('light', 'ui/phosphor-menu-light.css');
-        var toastrThemeUrls = new Map();
-        toastrThemeUrls.set('dark', 'ui/extra/toastr-2.1.4-dark.css');<!--("THEMED")-->
-        toastrThemeUrls.set('light', 'ui/extra/toastr-2.1.4.css');<!--("THEMED")https://www.jsdelivr.com/package/npm/toastr?path=build-->
-        setTheme('dark');
-    </script>
-    <script>
-        <!--TODO: Change these to local urls-->
-        require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@latest/min/vs' }});
-        window.MonacoEnvironment = { getWorkerUrl: () => proxy };
-        let proxy = URL.createObjectURL(new Blob([`
-            self.MonacoEnvironment = {
-                baseUrl: 'https://unpkg.com/monaco-editor@latest/min/'
-            };
-            importScripts('https://unpkg.com/monaco-editor@latest/min/vs/base/worker/workerMain.js');
-        `], { type: 'text/javascript' }));
-        require(["vs/editor/editor.main"], function () {
-            // There's a bug which breaks tab focus if monaco isn't loaded prior to the ui. Just wait for monaco...
-            onMonacoReady();
-            main();
-        });
-        function onMonacoReady() {
-            var config = {
-                vfs_prefix: 'managed',
-                deploy_prefix: 'managed',
-                enable_debugging: 0,
-                file_list: ['mscorlib.dll', 'netstandard.dll', 'System.dll', 'WebAssembly.Bindings.dll', 'hello.exe', 'mcs-host.exe', 'mcs.exe', 'System.Core.dll', 'System.Xml.dll', 'Mono.Security.dll', 'System.Net.Http.dll', 'System.Net.Http.WebAssemblyHttpHandler.dll', 'System.Memory.dll']
-            };
-            window.Module = { 
-                onRuntimeInitialized: function () {
-                    MONO.mono_load_runtime_and_bcl (
-                        config.vfs_prefix,
-                        config.deploy_prefix,
-                        config.enable_debugging,
-                        config.file_list,
-                        function () {
-                            onMonoInitialized();
-                        }
-                    )
-                },
-            };
-            function onMonoInitialized() {
-                return;
-                FS.mkdir('/idb');
-                FS.mount(IDBFS, {}, '/idb');
-                FS.syncfs(true, function (err) {
-                    if (err) {
-                        console.log('onMonoInitialized-syncfs error: ' + err);
-                    }
-                    //BINDING.call_static_method("[hello] Program:Main", []);
-                    BINDING.call_static_method("[mcs-host] Program:Main", []);
-                    setTimeout(function(){
-                        console.log('going...');
-                        BINDING.call_static_method("[mcs-host] Program:Main", []);
-                    },3000);
-                    //BINDING.call_static_method("[mcs] Mono.CSharp.Driver:Main", [[]]);
-                });
-            }
+        if (typeof WebAssembly === 'undefined') {
+            alert('Your web browser does not support WebAssembly.');
+            throw 'No wasm';
         }
+        
+        // Basic info about this project (displayed on first terminal open / other places which provide links to the repo)
+        var webProjectName = 'webcs';
+        var webProjectVersion = '1.0';
+        var webProjectRepoUrl = 'https://github.com/pixeltris/webcs';
+        var webProjectRepoDefaultBranch = 'master';
+        var webProjectRuntimeVersion = '6.0.1';
+        
+        <!--0.29.1 | https://www.jsdelivr.com/package/npm/monaco-editor-->
+        var locPath = window.location.origin + '/';
+        require.config({ paths: { 'vs': locPath + 'ui/monaco-editor/min/vs' }});
+        let monacoProxy = URL.createObjectURL(new Blob([`
+            self.MonacoEnvironment = {
+                baseUrl: '${locPath}ui/monaco-editor/min/'
+            };
+            importScripts('${locPath}ui/monaco-editor/min/vs/base/worker/workerMain.js');
+        `], { type: 'text/javascript' }));
+        window.MonacoEnvironment = { getWorkerUrl: () => monacoProxy };
+        
+        // Set the runtime initialization callback (invoked by dotnet.js - we'll do our own mono loading in dotnet-extra.js)
+        window.Module = {
+            onRuntimeInitialized: function() {
+                WebcsInterop.init();// Inits .NET and then calls initUI()
+                require(['vs/editor/editor.main']);// Should be async, but it does seem to slightly slow down loading doing it here
+            }
+        };
+        
+        // Set up a page load handler to update the loading progress text
+        window.addEventListener('load', function() {
+            WebcsInterop.onPageLoad();
+        });
     </script>
     <noscript>
         <style>
@@ -93,7 +59,7 @@
             body{padding:5px}
             a{color:inherit;}
         </style>
-        <body>Enable JavaScript to use this website</br></br><a href="https://github.com/pixeltris/webcs">https://github.com/pixeltris/webcs</a></body>
+        <body>JavaScript required</br></br><a href="https://github.com/pixeltris/webcs">https://github.com/pixeltris/webcs</a></body>
     </noscript>
     <div id='pageLoadingDiv'>Loading...</div>
 </html>

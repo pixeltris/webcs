@@ -9599,6 +9599,16 @@ var content = __webpack_require__(55);*/
 	            }
 	            if (item === current) {
 	                tab.classList.add(CURRENT_CLASS);
+                    var parent = this.parent;
+                    while (parent != null) {
+                        if (parent.constructor.name == 'DockPanel') {
+                            if (parent.focusedWidget == current) {
+                                tab.classList.add(CURRENT_CLASS_FOCUSED);// Only set focus for the active tab bar
+                            }
+                            break;
+                        }
+                        parent = parent.parent;
+                    }
 	                tab.style.zIndex = "" + n;
 	            }
 	            else {
