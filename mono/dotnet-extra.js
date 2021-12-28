@@ -39,6 +39,7 @@ var WebcsInterop = {
     init_mono_debug_level: 0,
     webcsOnTabClosed: null,
     webcsOnReadLine: null,
+    webcsOnRunWasmComplete: null,
     webcsOnProcessExit: null,
     webcsOnProcessKill: null,
     webcsRunMain: null,
@@ -274,6 +275,7 @@ var WebcsInterop = {
         }
         this.webcsOnTabClosed = this.bindStaticMethod('OnTabClosed');
         this.webcsOnReadLine = this.bindStaticMethod('OnReadLine');
+        this.webcsOnRunWasmComplete = this.bindStaticMethod('OnRunWasmComplete');
         this.webcsOnProcessExit = this.bindStaticMethod('OnProcessExit');
         this.webcsOnProcessKill = this.bindStaticMethod('OnProcessKill');
     },

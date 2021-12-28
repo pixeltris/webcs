@@ -872,12 +872,12 @@
         },
         {
             "path": "bin/webcs/webcs.cs",
-            "size": 54316
+            "size": 55957
         },
         {
             "assemblyName": "webcs, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null",
             "path": "bin/webcs/webcs.exe",
-            "size": 30720
+            "size": 31744
         }
     ]
 }

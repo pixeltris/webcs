@@ -108,6 +108,10 @@ function uiGetProcessById(processId) {
     return null;
 }
 
+function uiIsProcessAlive(processId) {
+    return uiGetProcessById(processId) != null;
+}
+
 function uiProcessExit(processId, exitCode) {
     var process = uiGetProcessById(processId);
     if (process != null) {
@@ -133,6 +137,24 @@ function uiProcessReadLine(processId, promptText) {
         }
         process.controller.read(promptText).then(str => {
             WebcsInterop.webcsOnReadLine(process.controller.widget.tabId, processId, str);
+        });
+    }
+}
+
+function uiProcessRunWasm(processId, buffer, func) {
+    if (!WebcsInterop.webcsOnRunWasmComplete) {
+        return;
+    }
+    var process = uiGetProcessById(processId);
+    if (process != null) {
+        WebAssembly.instantiate(buffer).then(result => {
+            if (result && result.instance) {
+                func(result.instance);
+            }
+        }).catch(err => {
+            console.error(err);
+        }).finally(() => {
+            WebcsInterop.webcsOnRunWasmComplete(processId);
         });
     }
 }

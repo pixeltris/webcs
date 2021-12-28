@@ -22,3 +22,4 @@ Follow the sequence of commands at the top of a given file and use `edit [FILENA
 - [github-hello.cs](github-hello.cs) - Usage of the `github` command to fetch a "Hello world" project and compile / run it unmodified.
 - [fileout.cs](fileout.cs) - Writes a file using code. You can then use the `fs out [PATH]` command to save the file to your device.
 - [main.cs](main.cs) - Usage of the `Main` entry point function.
+- [wasm.cs](wasm.cs) - Compile / run WASM (both directly and WASM->IL lifter). This uses [dotnet-webassembly](https://github.com/RyanLamansky/dotnet-webassembly) and is pulled in with `nuget`.

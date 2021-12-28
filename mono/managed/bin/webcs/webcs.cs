@@ -689,6 +689,7 @@ static class WebcsCompilerHelper
         }
         references.Add("System.Console.dll");
         references.Add("System.Runtime.dll");
+        references.Add("System.Collections.dll");
 #endif
         if (Webcs.activeCompiler == null)
         {
@@ -969,6 +970,7 @@ class WebcsTextWriter : TextWriter
 public class WebcsProcess
 {
     private Action<string> readlineCallback;
+    private Action runWasmCallback;
     public event Action OnTabClosed;
     public event Action OnExit;
     public event Action OnKill;
@@ -981,6 +983,10 @@ public class WebcsProcess
     }
     public string[] Args { get; private set; }
     public string CurrentDirectory { get; set; }
+    public bool IsAlive
+    {
+        get { return Webcs.IsProcessAlive(Id); }
+    }
     
     public WebcsProcess(long tabId, long processId, string[] args)
     {
@@ -999,6 +1005,15 @@ public class WebcsProcess
     {
         readlineCallback = callback;
         Webcs.ProcessReadLine(Id, promptText);
+    }
+    
+    public void RunWasm(byte[] wasmBuffer, string evalCode, Action callback = null)
+    {
+        if (callback != null)
+        {
+            runWasmCallback = callback;
+        }
+        Webcs.ProcessRunWasm(Id, wasmBuffer, evalCode);
     }
     
     public void CloseTab()
@@ -1031,6 +1046,16 @@ public class WebcsProcess
         if (callback != null)
         {
             callback(str);
+        }
+    }
+    
+    internal void OnRunWasmComplete()
+    {
+        Action callback = runWasmCallback;
+        runWasmCallback = null;
+        if (callback != null)
+        {
+            callback();
         }
     }
     
@@ -1098,6 +1123,13 @@ public static class Webcs
         InvokeJS("uiTerminalWriteLine(" + tabId + ", `" + str.Replace("`", "\\`") + "`)");
     }
     
+    public static bool IsProcessAlive(long processId)
+    {
+        bool result;
+        bool.TryParse(InvokeJS("uiIsProcessAlive(" + processId + ")"), out result);
+        return result;
+    }
+    
     public static void ProcessExit(long processId, int exitCode)
     {
         InvokeJS("uiProcessExit(" + processId + ", " + exitCode + ")");
@@ -1111,6 +1143,20 @@ public static class Webcs
     public static void ProcessReadLine(long processId, string promptText = null)
     {
         InvokeJS("uiProcessReadLine(" + processId + ", `" + promptText + "`)");
+    }
+    
+    public static void ProcessRunWasm(long processId, byte[] wasmBuffer, string evalCode)
+    {
+        StringBuilder hex = new StringBuilder(wasmBuffer.Length * 4);
+        foreach (byte b in wasmBuffer)
+        {
+            hex.Append((hex.Length > 0 ? "," : string.Empty) + "0x" + b.ToString("X2"));
+        }
+        if (evalCode == null)
+        {
+            evalCode = string.Empty;
+        }
+        InvokeJS("uiProcessRunWasm(" + processId + ", new Uint8Array([" + hex + "]), (instance)=>{" + evalCode + "})");
     }
     
     public static long GetActiveTabId()
@@ -1167,6 +1213,15 @@ public static class Webcs
         if (processes.TryGetValue(processId, out process))
         {
             process.OnReadLine(str);
+        }
+    }
+    
+    static void OnRunWasmComplete(long processId)
+    {
+        WebcsProcess process;
+        if (processes.TryGetValue(processId, out process))
+        {
+            process.OnRunWasmComplete();
         }
     }
     
