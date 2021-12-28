@@ -12090,7 +12090,7 @@ var content = __webpack_require__(55);*/
 	     * Handle the `'mouseup'` event for the menu.
 	     */
 	    Menu.prototype._evtMouseUp = function (event) {
-	        if (event.button !== 0) {
+	        if (event.button !== 0 && event.button !== 2) {
 	            return;
 	        }
 	        event.preventDefault();
