@@ -1479,6 +1479,9 @@ class TerminalCommand_dotnet extends TerminalCommand {
                             case 'getcomp':
                                 cmd.runGetComp = true;
                                 break;
+                            case 'samples':
+                                cmd.runGetSamples = true;
+                                break;
                             case 'help':
                                 cmd.showHelp = true;
                                 break;
@@ -1514,7 +1517,8 @@ class TerminalCommand_dotnet extends TerminalCommand {
                 this.process.controller.term.writeln('csc         Builds source files');
                 this.process.controller.term.writeln('new         Creates a csproj of [NAME]');
                 this.process.controller.term.writeln('getcomp     Get available compilers');
-                this.process.controller.term.writeln('setcomp     Sets the active compiler');
+                this.process.controller.term.writeln('setcomp     Set the active compiler');
+                this.process.controller.term.writeln('samples     Fetch sample code');
                 this.process.controller.term.writeln('version     Version info of .NET / webcs');
                 this.process.controller.term.writeln('');
                 this.process.controller.term.writeln('See github for more info');
@@ -1570,6 +1574,23 @@ class TerminalCommand_dotnet extends TerminalCommand {
             } else {
                 if (!this.isDotNetLoaded()) {
                     this.printDotNetNotLoaded();
+                }
+                else if (cmd.runGetSamples) {
+                    var path = this.process.controller.workingDirectory;
+                    if (!path.endsWith('/')) {
+                        path += '/';
+                    }
+                    path += 'samples/';
+                    try {
+                        FS.mkdir(path);
+                    } catch {}
+                    this.process.controller.workingDirectory = path;
+                    // Hijack the process...
+                    var githubCmd = new TerminalCommand_github();
+                    githubCmd.process = this.process;
+                    this.process.commandJs = githubCmd;
+                    githubCmd.run(['-d', getWebProjectRepoUrlForFile('mono/managed/samples')]);
+                    return;
                 } else if (cmd.runGetComp) {
                     this.process.controller.term.writeln('Compilers: ' + WebcsInterop.callStaticMethod('GetCompilers'));
                     this.process.controller.term.writeln('Active: ' + WebcsInterop.callStaticMethod('GetActiveCompiler'));

@@ -866,7 +866,7 @@ function getWebProjectRepoUrl() {
 }
 
 function getWebProjectRepoUrlForFile(path, branch) {
-    return getWebProjectRepoUrl() + '/' + (branch || webProjectRepoDefaultBranch) + '/' + path;
+    return getWebProjectRepoUrl() + '/tree/' + (branch || webProjectRepoDefaultBranch) + '/' + path;
 }
 
 // https://stackoverflow.com/questions/11381673/detecting-a-mobile-browser/11381730#11381730

@@ -4,11 +4,9 @@ This folder contains code samples to get familiar with webcs.
 
 ## Usage
 
-Run the following command in webcs to pull these files into the virtual filesystem.
+Run `dotnet samples` in webcs to pull these files into the virtual filesystem.
 
-`github -d https://github.com/pixeltris/webcs/tree/master/mono/managed/samples`
-
-*Don't miss the `-d` in the `github` command and don't run it in `/`. Do something like `mkdir samples`, `cd samples`, followed by the above `github` command.*
+*`dotnet samples` internally runs `mkdir samples`, `cd samples`, `github -d https://github.com/pixeltris/webcs/tree/master/mono/managed/samples`*
 
 Follow the sequence of commands at the top of a given file and use `edit [FILENAME]` to modify the code.
 

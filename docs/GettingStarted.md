@@ -54,6 +54,7 @@ To expand on this:
   - Note: You'll almost always want `/r:webcs.exe`.
 - `dotnet getcomp` Get available compilers (and list the active compiler language versions).
 - `dotnet setcomp` Set the active compiler (`roslyn` / `mcs`).
+- `dotnet samples` Fetch `/mono/managed/samples/` files from github.
 - `dotnet version` Get version info of .NET / webcs.
 - `dotnet help` Show help (no command specifics unfortunately).
 - `dotnet [BINARY] [ARGS]` Run the given `[BINARY]` with `[ARGS]` (e.g. `dotnet hello.exe arg1 arg2`).
