@@ -2,7 +2,7 @@
 
 This gives a very basic introduction to using webcs and a list of available commands.
 
-See [samples](/mono/managed/samples/) and [how it works](HowItWorks.md).
+See [samples](/mono/managed/samples#about) and [how it works](HowItWorks.md).
 
 ## Hello world
 

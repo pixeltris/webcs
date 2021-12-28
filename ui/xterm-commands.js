@@ -1574,8 +1574,7 @@ class TerminalCommand_dotnet extends TerminalCommand {
             } else {
                 if (!this.isDotNetLoaded()) {
                     this.printDotNetNotLoaded();
-                }
-                else if (cmd.runGetSamples) {
+                } else if (cmd.runGetSamples) {
                     var path = this.process.controller.workingDirectory;
                     if (!path.endsWith('/')) {
                         path += '/';

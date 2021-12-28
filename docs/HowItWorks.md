@@ -22,7 +22,7 @@ The Emscripten callback `Module.onRuntimeInitialized` is assigned and when invok
 
 ![Alt text](pics/how-ui-loaded.png)
 
-Terminal commands can now be used. These are implemented by [xterm-commands.js](/ui/xterm-commands.js) and are hooked up by [xterm-controller.js](xterm-controller.js) (a fork of [local-echo](https://github.com/wavesoft/local-echo)). The controller handles various logic (input, history, tab completion, commands, escape sequence handlers, virtual processes, working directory).
+Terminal commands can now be used. These are implemented by [xterm-commands.js](/ui/xterm-commands.js) and are hooked up by [xterm-controller.js](/ui/xterm-controller.js) (a fork of [local-echo](https://github.com/wavesoft/local-echo)). The controller handles various logic (input, history, tab completion, commands, escape sequence handlers, virtual processes, working directory).
 
 The following is an example of using the `touch` command, followed by using tab completion after entering "fi":
 

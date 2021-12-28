@@ -22,7 +22,7 @@ Compile / run C# in a web browser via a web server
 
 ## C# to JavaScript transpilers
 
-- https://github.com/bridgedotnet/Bridge / https://github.com/theolivenbaum/h5
+- https://github.com/theolivenbaum/h5 / https://github.com/bridgedotnet/Bridge (dead)
 - https://github.com/sq/JSIL
 - https://github.com/praeclarum/Netjs
 - https://github.com/SharpKit/SharpKit
