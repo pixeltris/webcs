@@ -15,6 +15,7 @@
   - added DockPanel.splittingWidget / change insertSplit->insertSplitImpl
   - changed MenuItemPrivate initFrom to use Object.assign
   - TabBar._evtMouseDown changed to allow right mouse button to focus the tab
+  - TabBar._evtMouseUp hooked up to 'mouseup' event and added middle click tab close handler (as _evtClick doesn't seem to include middle mouse)
 */
 var useAltTextOnTabs = false;
 var contextMenuCloserToMouse = true;

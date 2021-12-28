@@ -9567,6 +9567,7 @@ var content = __webpack_require__(55);*/
 	    TabBar.prototype.onAfterAttach = function (msg) {
 	        this.node.addEventListener('click', this);
 	        this.node.addEventListener('mousedown', this);
+            this.node.addEventListener('mouseup', this);
 			this.node.addEventListener('mousemove', this);
 			this.node.addEventListener('mouseleave', this);
 			this.node.addEventListener('contextmenu', this);
@@ -9577,6 +9578,7 @@ var content = __webpack_require__(55);*/
 	    TabBar.prototype.onBeforeDetach = function (msg) {
 	        this.node.removeEventListener('click', this);
 	        this.node.removeEventListener('mousedown', this);
+            this.node.removeEventListener('mouseup', this);
 			this.node.removeEventListener('mousemove', this);
 			this.node.removeEventListener('mouseleave', this);
 			this.node.removeEventListener('contextmenu', this);
@@ -9836,6 +9838,27 @@ var content = __webpack_require__(55);*/
 	     */
 	    TabBar.prototype._evtMouseUp = function (event) {
 	        var _this = this;
+            this.clearTooltip();
+	        if (!this._dragData && event.button === 1) {
+                // Doing this here because chrome doesn't fire middle button click event (NOTE: This was mostly copied from _evtClick)
+                var x = event.clientX;
+                var y = event.clientY;
+                var i = arrays.findIndex(this._tabs, function (tab) { return phosphor_domutil_1.hitTest(tab, x, y); });
+                if (i < 0) {
+                    return;
+                }
+                // Clicking on a tab stops the event propagation.
+                event.preventDefault();
+                event.stopPropagation();
+                var item = this._items[i];
+                // Ignore the click if the title is not closable.
+                if (!item.title.closable) {
+                    return;
+                }
+                // Emit the tab close requested signal.
+                this.tabCloseRequested.emit({ index: i, item: item });
+	            return;
+	        }
 	        // Do nothing if it's not a left mouse release.
 	        if (event.button !== 0) {
 	            return;
