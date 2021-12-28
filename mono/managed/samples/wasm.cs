@@ -100,7 +100,7 @@ class Program
             module.WriteToBinary(stream);
             Action onWasmRunComplete = () =>
             {
-                p.WriteLine("Saving as Demo.wasm`");
+                p.WriteLine("Saving as Demo.wasm");
                 using (Stream stream = File.Create(Path.Combine(p.CurrentDirectory, "Demo.wasm")))
                 {
                     module.WriteToBinary(stream);
@@ -111,7 +111,7 @@ class Program
             p.RunWasm(stream.ToArray(), $@"
 uiTerminalWriteLine({p.TabId}, instance.exports.Demo(0));
 uiTerminalWriteLine({p.TabId}, instance.exports.Demo(1));
-uiTerminalWriteLine({p.TabId}, instance.exports.Demo(3));", onWasmRunComplete);
+uiTerminalWriteLine({p.TabId}, instance.exports.Demo(42));", onWasmRunComplete);
         }
         
         p.OnKill += () => {
