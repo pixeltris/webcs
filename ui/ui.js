@@ -338,7 +338,7 @@ function createTextEditor(widget, options) {
             language: lang,
             theme: 'vs',
             automaticLayout: true,
-            fontSize: isMobile ? 20 : 14
+            fontSize: 14//isMobile ? 20 : 14
         });
         editor.updateOptions({ autoClosingBrackets: false });// TODO: Make this configurable
         // This most certainly isn't the correct way to do this, but nothing else seems to work!
@@ -389,7 +389,7 @@ function showTerminalHelp(term) {
 function createXTerm(widget, options) {
     var fitAddon = new FitAddon.FitAddon();
     var term = new Terminal({
-        fontSize: isMobile ? 20 : 12,
+        fontSize: 12,//isMobile ? 20 : 12,
         fontFamily:'Consolas, courier-new, courier, monospace',
         //rendererType: 'dom',
     });
