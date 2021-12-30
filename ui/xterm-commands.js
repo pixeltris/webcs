@@ -16,6 +16,7 @@ function bytesToSize(bytes, decimals = 2) {
 class TerminalCommand {
     constructor() {
         this.disabled = false;
+        this.hidden = false;
         this.process = null;
     }
     getArgKeyValue(arg) {
@@ -1363,7 +1364,7 @@ class TerminalCommand_dotnet extends TerminalCommand {
         var result = true;
         for (var key of Object.keys(WebcsInterop.allFilesByName)) {
             var fileInfo = WebcsInterop.allFilesByName[key];
-            if (fileInfo.assemblyName && !fileInfo.isLoaded) {
+            if (fileInfo.behavior == WCS_FILE_BEHAVIOR_ASSEMBLY && !fileInfo.isLoaded) {
                 result = false;
                 break;
             }
@@ -1374,6 +1375,9 @@ class TerminalCommand_dotnet extends TerminalCommand {
         this.process.controller.term.writeln('Run `dotnet load`');
     }
     loadDotNet(fileInfosToLoad, loadQuiet) {
+        if (fileInfosToLoad.length > 0 && !loadQuiet) {
+            this.process.controller.term.writeln('Fetching...');
+        }
         WebcsInterop.loadFiles(fileInfosToLoad, (response) => {
             if (WebcsInterop.fullLoaderUseSimpleProgressBar) {
                 this.process.controller.term.writeln('');
@@ -1504,7 +1508,7 @@ class TerminalCommand_dotnet extends TerminalCommand {
                 for (var key of Object.keys(this.process.controller._registeredCommandsJs)) {
                     var command = this.process.controller._registeredCommandsJs[key];
                     var instance = new command;
-                    if (!commandsSet.has(instance.name)) {
+                    if (!instance.hidden && !commandsSet.has(instance.name)) {
                         commandsSet.add(instance.name);
                         commandsStr += instance.name + ' ';
                     }
@@ -1548,8 +1552,8 @@ class TerminalCommand_dotnet extends TerminalCommand {
                     var totalSize = 0;
                     for (var key of Object.keys(WebcsInterop.allFilesByName)) {
                         var fileInfo = WebcsInterop.allFilesByName[key];
-                        if (fileInfo.assemblyName && !fileInfo.isLoaded) {
-                            fileInfosToLoad.push(fileInfo.path);
+                        if (fileInfo.behavior == WCS_FILE_BEHAVIOR_ASSEMBLY && !fileInfo.isLoaded) {
+                            fileInfosToLoad.push(fileInfo.name);
                             totalSize += fileInfo.size;
                         }
                     }
@@ -2100,7 +2104,9 @@ class TerminalCommand_nuget extends TerminalCommand {
                                             return;
                                         }
                                         var onFileData = (file, fileData, success) => {
-                                            if (success) {
+                                            if (file.dir) {
+                                                // Ignore...
+                                            } else if (success) {
                                                 var filePath = file.name;
                                                 if (!extractAll && extractLib && filePath.startsWith('lib/')) {
                                                     // Remove /lib/ as it's a little pointless when not extracting all files
@@ -2192,20 +2198,6 @@ class TerminalCommand_nuget extends TerminalCommand {
     kill() {
         this.fetchAbort.abort();
         this.process.controller.term.writeln('Aborted');
-    }
-}
-
-class TerminalCommand_help extends TerminalCommand {
-    constructor() {
-        super();
-        this.name = 'help';
-        this.nameAliases = ['?', '??', '???'];
-    }
-    run() {
-        if (this.process.controller != null) {
-            showTerminalHelp(this.process.controller.term);
-        }
-        this.process.exit();
     }
 }
 
@@ -2658,7 +2650,9 @@ class TerminalCommand_unzip extends TerminalCommand {
                                 if (this.isAborted) {
                                     return;
                                 }
-                                if (success) {
+                                if (file.dir) {
+                                    // Ignore...
+                                } else if (success) {
                                     var filePath = file.name;
                                     var fileDir = filePath;
                                     var lastSlashIndex = fileDir.lastIndexOf('/');
@@ -2678,7 +2672,7 @@ class TerminalCommand_unzip extends TerminalCommand {
                                 }
                                 if (++numFilesExtracted == numFilesToExtract) {
                                     if (numFilesExtractedFailed > 0) {
-                                        this.process.controller.term.writeln('unzip: ' + paths[i] + ': failed to extract ' + numFilesExtractedFailed + ' files');
+                                        this.process.controller.term.writeln('unzip: failed to extract ' + numFilesExtractedFailed + ' files');
                                     }
                                     thisZipProcessed();
                                 }
@@ -2693,12 +2687,12 @@ class TerminalCommand_unzip extends TerminalCommand {
                             }
                         }).catch(err => {
                             console.log(err);
-                            this.process.controller.term.writeln('unzip: ' + paths[i] + ': unzip failed. See browser console log');
+                            this.process.controller.term.writeln('unzip: ' + inputPath + ': unzip failed. See browser console log');
                             thisZipProcessed();
                         });
                     } catch (err) {
                         console.log(err);
-                        this.process.controller.term.writeln('unzip: ' + paths[i] + ': read failed. See browser console log');
+                        this.process.controller.term.writeln('unzip: ' + inputPath + ': read failed. See browser console log');
                         thisZipProcessed();
                     }
                 }
@@ -2712,6 +2706,277 @@ class TerminalCommand_unzip extends TerminalCommand {
     kill() {
         this.isAborted = true;
         this.process.controller.term.writeln('Aborted');
+    }
+}
+
+class TerminalCommand_compress extends TerminalCommand {
+    constructor() {
+        super();
+        this.name = 'compress';
+        this.hidden = true;// This command isn't supported / may be removed. It's just used to create compressed files for GitHub Pages
+        this.isAborted = false;
+    }
+    run(args) {
+        if (this.process.controller != null) {
+            var showHelp = false;
+            var paths = [];
+            var isCompress = true;
+            var compressionType = CompressionType_None;
+            var compressionLevel = -1;
+            var memoryLevel = -1;
+            var outputDirectory = null;
+            var copyNonCompressedFiles = false;
+            var isRecursive = false;
+            var fileExtensions = new Set();
+            for (var i = 0; i < args.length; i++) {
+                var arg = args[i];
+                if (arg.startsWith('-')) {
+                    const [argKey, argValue] = this.getArgKeyValue(arg);
+                    switch (argKey) {
+                        case 'h':
+                        case 'help':
+                            showHelp = true;
+                            break;
+                        case 'd':
+                            isCompress = false;
+                            break;
+                        case 'l':
+                            compressionLevel = argValue | 0;
+                            break;
+                        case 'm':
+                            memoryLevel = argValue | 0;
+                            break;
+                        case 'gzip':
+                            compressionType = CompressionType_GZip;
+                            break;
+                        case 'brotli':
+                            compressionType = CompressionType_Brotli;
+                            break;
+                        case 'o':
+                            if (argValue) {
+                                outputDirectory = argValue;
+                            }
+                            break;
+                        case 'c':
+                            copyNonCompressedFiles = true;
+                            break;
+                        case 'r':
+                            isRecursive = true;
+                            break;
+                        case 'e':
+                            if (argValue) {
+                                var splitted = argValue.split(',').filter(x => x);
+                                for (var j = 0; j < splitted.length; j++) {
+                                    fileExtensions.add(splitted[j]);
+                                }
+                            }
+                            break;
+                    }
+                } else {
+                    paths.push(arg);
+                }
+            }
+            if (showHelp || args.length == 0) {
+                this.process.controller.term.writeln('Compress / decompress [PATH(s)]');
+                this.process.controller.term.writeln('-gzip    Use gzip');
+                this.process.controller.term.writeln('-brotli  Use brotli');
+                this.process.controller.term.writeln('-d       Decompress');
+                this.process.controller.term.writeln('-l:      Compression level (brotli 0-11) (gzip 0-9)');
+                this.process.controller.term.writeln('-m:      Memory level (gzip 0-12)');
+                this.process.controller.term.writeln('-o:      Output directory');
+                this.process.controller.term.writeln('-e:      File extensions to target');
+                this.process.controller.term.writeln('-c       On decompress copy non-compressed files to output dir');
+                this.process.controller.term.writeln('-r       Recursive');
+            } else {
+                var isFilesOnly = true;
+                for (var i = paths.length - 1; i >= 0; i--) {
+                    var path = paths[i];
+                    var fullPath = this.process.controller.getFullPath(path);
+                    try {
+                        var node = FS.lookupPath(fullPath).node;
+                        if (node.isFolder) {
+                            isFilesOnly = false;
+                            if (!isRecursive) {
+                                this.process.controller.term.writeln('compress: ' + path + ': Is a directory');
+                                try {
+                                    paths.splice(i, 1);
+                                } catch {}
+                            }
+                        }
+                    } catch {
+                        this.process.controller.term.writeln('compress: ' + path + ': No such file or directory');
+                        paths.splice(i, 1);
+                    }
+                }
+                var gzipOpt = {};
+                if (compressionLevel >= 0) {
+                    gzipOpt.level = compressionLevel;
+                }
+                if (memoryLevel >= 0) {
+                    gzipOpt.mem = memoryLevel;
+                }
+                var compressionInstance = null;
+                var compressionInstances = [];
+                var work = 0;
+                var runCompressionForPaths = (targetPaths, dstPathFull) => {
+                    var targetPathsIndex = 0;
+                    work++;
+                    var runCompressionForNextPath = () => {
+                        if (targetPaths.length > 0) {
+                            runCompressionForPath(targetPaths[targetPathsIndex++], dstPathFull);
+                        }
+                        if (targetPathsIndex >= targetPaths.length) {
+                            if (--work <= 0) {
+                                this.isAborted = true;
+                                this.process.exit();
+                            }
+                        } else {
+                            setTimeout(runCompressionForNextPath, 1);
+                        }
+                    };
+                    runCompressionForNextPath();
+                };
+                var runCompressionForPath = (path, dstPathFull) => {
+                    if (this.isAborted) {
+                        return;
+                    }
+                    if (!dstPathFull.endsWith('/')) {
+                        dstPathFull += '/';
+                    }
+                    try {
+                        FS.mkdirTree(dstPathFull);
+                    } catch {}
+                    var fullPath = this.process.controller.getFullPath(path);
+                    try {
+                        var node = FS.lookupPath(fullPath).node;
+                        if (node.isFolder) {
+                            var dstPath = dstPathFull + node.name;
+                            try {
+                                FS.mkdirTree(dstPath);
+                            } catch {}
+                            if (isRecursive) {
+                                var childPaths = [];
+                                for (var key of Object.keys(node.contents)) {
+                                    childPaths.push(FS.getPath(node.contents[key]));
+                                }
+                                runCompressionForPaths(childPaths, dstPath);
+                            }
+                        } else {
+                            var logMsg = path;
+                            console.log(logMsg);
+                            this.process.controller.term.writeln(logMsg);
+                            var data = null;
+                            try {
+                                data = FS.readFile(fullPath);
+                            } catch {}
+                            if (data != null) {
+                                try {
+                                    if (isCompress) {
+                                        var compressedData = null;
+                                        switch (compressionInstance.libType) {
+                                            case CompressionType_Brotli:
+                                                compressedData = new Uint8Array(compressionInstance.compressArray(data, compressionLevel >= 0 ? compressionLevel : 1));
+                                                break;
+                                            case CompressionType_GZip:
+                                                compressedData = compressionInstance.gzipSync(data, gzipOpt);
+                                                break;
+                                        }
+                                        if (compressedData) {
+                                            var extension = getCompressionFileExtension(compressionInstance.libType);
+                                            FS.writeFile(dstPathFull + node.name + extension, compressedData);
+                                        }
+                                    } else {
+                                        var libInfo = getCompressionLibInfoFromPath(fullPath);
+                                        var libInstance = compressionInstances[libInfo.type];
+                                        if (!libInstance) {
+                                            FS.writeFile(dstPathFull + node.name, data);
+                                        } else {
+                                            var decompressedData = null;
+                                            switch (libInstance.libType) {
+                                                case CompressionType_Brotli:
+                                                    //decompressedData = new Uint8Array(libInstance.decompressArray(data));//brotli.js
+                                                    decompressedData = libInstance.decode(data);//brotli-decode.min.js
+                                                    debugger;
+                                                    break;
+                                                case CompressionType_GZip:
+                                                    decompressedData = libInstance.decompressSync(data);
+                                                    break;
+                                            }
+                                            if (decompressedData) {
+                                                FS.writeFile(dstPathFull + libInfo.nameWithoutExtension, decompressedData);
+                                            }
+                                        }
+                                    }
+                                } catch(err) {
+                                    console.error('Failed to compress ' + path);
+                                    console.error(err);
+                                }
+                            }
+                        }
+                    } catch {}
+                };
+                var runCompression = () => {
+                    if (this.isAborted) {
+                        return;
+                    }
+                    if (paths.length > 0) {
+                        var logMsg = (isCompress ? 'Compressing' : 'Decompressing') + '...';
+                        console.log(logMsg);
+                        this.process.controller.term.writeln(logMsg);
+                    }
+                    var outDir = this.process.controller.workingDirectory;
+                    if (!isFilesOnly || outputDirectory) {
+                        outDir = this.process.controller.getFullPath(outputDirectory ? outputDirectory : 'out')
+                    }
+                    runCompressionForPaths(paths, outDir);
+                };
+                if (isCompress) {
+                    var libLoadedCallback = (instance) => {
+                        compressionInstance = instance;
+                        runCompression();
+                    };
+                    if (!getLibForCompress(compressionType, libLoadedCallback)) {
+                        this.process.controller.term.writeln('Failed to get compression lib (check console log)');
+                        this.process.exit();
+                    }
+                } else {
+                    var targetLibTypes = [CompressionType_Brotli, CompressionType_GZip];
+                    var loadedLibs = 0;
+                    var libLoadedCallback = (instance) => {
+                        compressionInstances[instance.libType] = instance;
+                        if (++loadedLibs == targetLibTypes.length) {
+                            runCompression();
+                        }
+                    };
+                    for (var i = 0; i < targetLibTypes.length; i++) {
+                        if (!getLibForDecompress(targetLibTypes[i], libLoadedCallback)) {
+                            this.process.controller.term.writeln('Failed to get compression lib (check console log)');
+                            this.process.exit();
+                            break;
+                        }
+                    }
+                }
+                return;
+            }
+        }
+        this.process.exit();
+    }
+    kill() {
+        this.isAborted = true;
+    }
+}
+
+class TerminalCommand_help extends TerminalCommand {
+    constructor() {
+        super();
+        this.name = 'help';
+        this.nameAliases = ['?', '??', '???'];
+    }
+    run() {
+        if (this.process.controller != null) {
+            showTerminalHelp(this.process.controller.term);
+        }
+        this.process.exit();
     }
 }
 
@@ -2767,6 +3032,7 @@ allTerminalCommandsJs = {
     TerminalCommand_fs,
     TerminalCommand_zip,
     TerminalCommand_unzip,
+    TerminalCommand_compress,
     TerminalCommand_help,
     TerminalCommand_looptest,
 };

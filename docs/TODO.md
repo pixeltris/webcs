@@ -7,6 +7,7 @@
 - Look into bug where mcs.exe seems to alternate throwing an exception on each compile
 - Fix bug where you can't actually kill `dotnet load`
 - Reduce the number of assemblies fetched in `dotnet load`. We only need a small handful. Other assemblies could be fetched dynamically on `dotnet build`. This should reduce bandwith and speed up load time.
+- Fix bug with tab completion duplicating input when there's more than 1 result.
 
 ## Maybe...
 - Support gist.github.com

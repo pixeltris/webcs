@@ -177,52 +177,97 @@ var WebcsInterop = {
             if (this.logFileLoads) {
                 console.log('Attempting to fetch %s', url);
             }
+            let handleFileData = (bytes) => {
+                let loadSuccess = true;
+                try {
+                    var offset = null;
+                    switch (fileInfo.behavior) {
+                        case WCS_FILE_BEHAVIOR_ASSEMBLY:
+                        case WCS_FILE_BEHAVIOR_PDB:
+                            // mono_wasm_add_assembly handles assemblies and pdbs
+                            offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
+                            // /sdk/ is currently required if compiling with mcs.exe
+                            try {
+                                FS.mkdir('/sdk/');
+                            } catch{}
+                            FS.writeFile('/sdk/' + fileInfo.name, bytes);
+                            fileInfo.offset = offset;
+                            fileInfo.size = bytes.length;
+                            let hasPdb = MONO.mono_wasm_add_assembly(fileInfo.name, offset, bytes.length);
+                            if (hasPdb) {
+                                this.tryPushLoadedFile(fileInfo, url);
+                            }
+                            break;
+                        case WCS_FILE_BEHAVIOR_ICU:
+                            offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
+                            if (!MONO.mono_wasm_load_icu_data(offset)) {
+                                console.error('WebcsInterop: Error loading ICU asset %s', url);
+                            }
+                            break;
+                    }
+                    fileInfo.isLoaded = true;
+                } catch (exc) {
+                    loadSuccess = false;
+                    console.error('WebcsInterop: Unhandled exception processing fetch data\n%s', exc);
+                    throw exc;
+                } finally {
+                    onPendingRequestComplete(fileInfo, loadSuccess);
+                }
+            };
             try {
                 fetch(url, {credentials: 'same-origin'}).then((response) => {
                     if (response.ok) {
-                        try {
-                            response.arrayBuffer().then((buffer) => {
-                                let loadSuccess = true;
-                                try {
-                                    var bytes = new Uint8Array(buffer);
-                                    var offset = null;
-                                    switch (fileInfo.behavior) {
-                                        case WCS_FILE_BEHAVIOR_ASSEMBLY:
-                                        case WCS_FILE_BEHAVIOR_PDB:
-                                            // mono_wasm_add_assembly handles assemblies and pdbs
-                                            offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
-                                            // /sdk/ is currently required if compiling with mcs.exe
-                                            try {
-                                                FS.mkdir('/sdk/');
-                                            } catch{}
-                                            FS.writeFile('/sdk/' + fileInfo.name, bytes);
-                                            fileInfo.offset = offset;
-                                            fileInfo.size = bytes.length;
-                                            let hasPdb = MONO.mono_wasm_add_assembly(fileInfo.name, offset, bytes.length);
-                                            if (hasPdb) {
-                                                this.tryPushLoadedFile(fileInfo, url);
-                                            }
-                                            break;
-                                        case WCS_FILE_BEHAVIOR_ICU:
-                                            offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
-                                            if (!MONO.mono_wasm_load_icu_data(offset)) {
-                                                console.error('WebcsInterop: Error loading ICU asset %s', url);
-                                            }
-                                            break;
+                        response.arrayBuffer().then((arrayBuffer) => {
+                            var buffer = new Uint8Array(arrayBuffer);
+                            switch (fileInfo.compressionType) {
+                                case CompressionType_Brotli:
+                                case CompressionType_GZip:
+                                    // NOTE: Both of these are pretty bad (impacts the loading experience and causes RAM issues)
+                                    let libLoadedCallback = (instance) => {
+                                        switch (fileInfo.compressionType) {
+                                            case CompressionType_Brotli:
+                                                // A crappy attempt at reducing the negative impacts of the sync code (I don't think this works due to all of the asynced fetches)
+                                                setTimeout(() => {
+                                                    try {
+                                                        let dat = instance.decode(buffer);
+                                                        setTimeout(() => {
+                                                            handleFileData(dat);
+                                                        }, 1);
+                                                    } catch (exc) {
+                                                        console.error('WebcsInterop: Error doing brotli decode %s\n%s', url, exc);
+                                                        onPendingRequestComplete(fileInfo, false);                                                        
+                                                    }
+                                                }, 1);
+                                                break;
+                                            case CompressionType_GZip:
+                                                instance.decompress(buffer, (err, data) => {
+                                                    if (err) {
+                                                        console.error('WebcsInterop: Error doing gzip decode %s\n%s', url, err);
+                                                        onPendingRequestComplete(fileInfo, false);
+                                                    } else {
+                                                        handleFileData(data);
+                                                    }
+                                                });
+                                                break;
+                                            default:
+                                                console.error('WebcsInterop: This should not happen');
+                                                onPendingRequestComplete(fileInfo, false);
+                                                break;
+                                        }
+                                    };
+                                    if (!getLibForDecompress(fileInfo.compressionType, libLoadedCallback)) {
+                                        console.error('WebcsInterop: Failed to get decompress lib for %s\n%s', url);
+                                        onPendingRequestComplete(fileInfo, false);
                                     }
-                                    fileInfo.isLoaded = true;
-                                } catch (exc) {
-                                    loadSuccess = false;
-                                    console.error('WebcsInterop: Unhandled exception processing fetch data\n%s', exc);
-                                    throw exc;
-                                } finally {
-                                    onPendingRequestComplete(fileInfo, loadSuccess);
-                                }
-                            });
-                        } catch (exc) {
+                                    break;
+                                default:
+                                    handleFileData(buffer);
+                                    break;
+                            }
+                        }).catch(exc => {
                             console.error('WebcsInterop: Error handling fetch response %s\n%s', url, exc);
                             onPendingRequestComplete(fileInfo, false);
-                        }
+                        });
                     } else {
                         onPendingRequestComplete(fileInfo, false);
                     }
@@ -302,18 +347,22 @@ var WebcsInterop = {
                             if (!itemName) {
                                 this.initLoadError('Invalid .NET file list (sanitize it).');
                             }
+                            var compressionInfo = getCompressionLibInfoFromPath(itemName);
+                            if (compressionInfo.type != CompressionType_None) {
+                                itemName = compressionInfo.nameWithoutExtension;
+                                fileInfo.compressionType = compressionInfo.type;
+                            }
                             if (j == filePathSplitted.length - 1) {
                                 // Last path entry should be the file
                                 if (!fileInfo.behavior) {
                                     // Determine behavior from file name / path
                                     var itemNameLower = itemName.toLowerCase();
-                                    if (fileInfo.assemblyName) {
+                                    if (itemNameLower.endsWith('.dll') || itemNameLower.endsWith('.exe')) {
                                         fileInfo.behavior = WCS_FILE_BEHAVIOR_ASSEMBLY;
                                     } else if (itemNameLower.endsWith('.pdb')) {
                                         // This wont be true in the case if a native PDBs happen to be here...
                                         fileInfo.behavior = WCS_FILE_BEHAVIOR_PDB;
-                                    }
-                                    else if (itemNameLower.startsWith('icudt') && itemNameLower.endsWith('.dat')) {
+                                    } else if (itemNameLower.startsWith('icudt') && itemNameLower.endsWith('.dat')) {
                                         fileInfo.behavior = WCS_FILE_BEHAVIOR_ICU;
                                     }
                                 }

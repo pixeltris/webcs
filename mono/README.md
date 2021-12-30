@@ -27,6 +27,8 @@ Tests (useful reference code)
 - Bump the version number in `index.html`
 - Update the assembly / file size list below for "Hello world" (optional)
 
+*See `Compression` below.*
+
 TODO: Find out difference between [this](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/) runtime (which is being used) and [this](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.browser-wasm/) runtime  
 NOTE: There seem to be issues with both roslyn / mcs under `Microsoft.NETCore.App.Runtime.browser-wasm` 5.0.13
 
@@ -44,10 +46,12 @@ NOTE: There seem to be issues with both roslyn / mcs under `Microsoft.NETCore.Ap
 ## Updating roslyn
 - Download the latest build from [here](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp) and [here](https://www.nuget.org/packages/Microsoft.CodeAnalysis.Common)
 - Copy the desired dlls into `/mono/managed/bin/roslyn/`
-- Bump the version number in webcs.cs (WebcsCompilerRoslyn)
+- Bump the version number in `WebcsCompilerRoslyn` [webcs.cs](/mono/managed/bin/webcs/webcs.cs)
+
+*See `Compression` below.*
 
 ## Updating mcs
-- See webcs.cs (WebcsCompilerMcs)
+- See `WebcsCompilerMcs` [webcs.cs](/mono/managed/bin/webcs/webcs.cs)
 
 ## /mono/dotnet-extra.js
 - The mono runtime is loaded in here (as opposed to `mono_load_runtime_and_bcl`). `/mono/managed/files.json` lists all known files in `/mono/managed/` which allows it to find files on the static web server.
@@ -60,4 +64,35 @@ Libraries copied from the mono wasm runtime.
 All other types of libraries / binaries.
 
 ## /mono/icu/
-"International Components for Unicode" files.
+"International Components for Unicode" files (currently unused).
+
+## /mono/samples/
+Sample code. These can be fetched via `dotnet samples`.
+
+## Compression
+
+Compression is optional but it's used for the files found in this repo as it's hosted on GitHub Pages which doesn't gzip the files by default. If you're self hosting it'll be more efficient to use content encoding compression.
+
+```
+mkdir cmp
+cd cmp
+fs in <--- create managed.zip by zipping the managed folder and select it
+unzip managed.zip
+compress -brotli -r managed -l:9
+fs out out/managed
+```
+
+gzip alternative: `compress -gzip -r managed -l:9`
+
+At this point you want to copy the files you want and delete the originals. You'll also want to re-run genfiles.exe
+
+Getting original files back:
+
+```
+mkdir uncmp
+cd uncmp
+fs in <--- create managed.zip by zipping the managed folder and select it
+unzip managed.zip
+compress -d -r managed
+fs out out/managed
+```

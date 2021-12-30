@@ -37,7 +37,7 @@ namespace Genfiles
                 FileInfo fileInfo = new FileInfo(path);
                 string behavior = null;
                 WriteLine(sb, indent++, "{");
-                switch (Path.GetExtension(path).ToLower())
+                /*switch (Path.GetExtension(path).ToLower())
                 {
                     case ".dll":
                     case ".exe":
@@ -50,7 +50,7 @@ namespace Genfiles
                         {
                         }
                         break;
-                }
+                }*/
                 if (behavior != null)
                 {
                     WriteLine(sb, indent, "\"behavior\": \"" + behavior + "\",");

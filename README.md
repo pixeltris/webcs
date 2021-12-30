@@ -14,5 +14,5 @@ Try it here https://pixeltris.github.io/webcs
 - [Xterm.js](https://github.com/xtermjs/xterm.js) (terminals) (MIT)
 - [PhosphorJS](https://github.com/phosphorjs/phosphor) (docking / menus) (BSD-3-Clause)
 - [Monaco](https://github.com/microsoft/monaco-editor) (code editor) (MIT)
-- [JSZip](https://github.com/Stuk/jszip) (zip / unzip / nuget) (MIT)
+- [Compression libs](ui/compression#about) (MIT, Apache-2.0)
 - [Font Awesome](https://github.com/FortAwesome/Font-Awesome) (font based icons) (SIL OFL 1.1, MIT, CC BY 3.0)
