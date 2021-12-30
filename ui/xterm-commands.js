@@ -1374,9 +1374,9 @@ class TerminalCommand_dotnet extends TerminalCommand {
     printDotNetNotLoaded() {
         this.process.controller.term.writeln('Run `dotnet load`');
     }
-    loadDotNet(fileInfosToLoad, loadQuiet) {
-        if (fileInfosToLoad.length > 0 && !loadQuiet) {
-            this.process.controller.term.writeln('Fetching...');
+    loadDotNet(fileInfosToLoad, loadQuiet, totalSize) {
+        if (fileInfosToLoad.length > 0 && !loadQuiet && WebcsInterop.hasCompressedFiles && !WebcsInterop.fullLoaderUsePrompt) {
+            this.process.controller.term.writeln('Fetching ' + bytesToSize(totalSize, 1) + '...');
         }
         WebcsInterop.loadFiles(fileInfosToLoad, (response) => {
             if (WebcsInterop.fullLoaderUseSimpleProgressBar) {
@@ -1564,13 +1564,13 @@ class TerminalCommand_dotnet extends TerminalCommand {
                             this.process.controller.read(promptText).then(str => {
                                 if (str.toLowerCase().startsWith('y')) {
                                     // NOTE: Even if you terminate the process the following wont cancel...
-                                    this.loadDotNet(fileInfosToLoad, cmd.loadQuiet);
+                                    this.loadDotNet(fileInfosToLoad, cmd.loadQuiet, totalSize);
                                 } else {
                                     this.process.exit();
                                 }
                             });
                         } else {
-                            this.loadDotNet(fileInfosToLoad, cmd.loadQuiet);
+                            this.loadDotNet(fileInfosToLoad, cmd.loadQuiet, totalSize);
                         }
                         return;
                     }

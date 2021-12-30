@@ -34,7 +34,7 @@ GitHub Pages only gzips certain file types. This project (optionally) provides d
 
 ## Notes
 
-Both brotli and gzip are really bad client side. Even with gzip being async no data comes through until pretty much everything is decompressed so there is a long pause between doing a load request and the output for the first file being loaded. Brotli seems a little faster in general so. And both are kinda bad for RAM?
+Both brotli and gzip are really bad client side. Even with gzip being async no data comes through until pretty much everything is decompressed so there is a long pause between doing a load request and the output for the first file being loaded. Brotli seems a little faster in general. And both are kinda bad for RAM?
 
 Maybe pick the better one at some point and remove the other?
 

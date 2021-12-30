@@ -24,6 +24,7 @@ var WebcsInterop = {
         'webcs.exe',
         //'System.Private.Xml.dll', 'System.Xml.dll',
     ],
+    hasCompressedFiles: false,
     disablePreLoad: true,// If false load .NET runtime on page load. If true load it when requested (terminal command)
     fullLoaderUsePrompt: false,// If true prompt (y/n in terminal) when fetching full .NET runtime
     fullLoaderUseSimpleProgressBar: false,// If true output a simple loading progress bar when fetching full .NET runtime
@@ -351,6 +352,7 @@ var WebcsInterop = {
                             if (compressionInfo.type != CompressionType_None) {
                                 itemName = compressionInfo.nameWithoutExtension;
                                 fileInfo.compressionType = compressionInfo.type;
+                                this.hasCompressedFiles = true;
                             }
                             if (j == filePathSplitted.length - 1) {
                                 // Last path entry should be the file
