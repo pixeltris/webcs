@@ -1,6 +1,6 @@
 ## About
 
-This folder contains code samples to get familiar with webcs.
+This folder contains code samples for webcs.
 
 ## Usage
 
