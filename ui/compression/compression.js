@@ -27,7 +27,7 @@ var compressionWorkerRequestNextId = 1;
 function compressionCreateWorker(workerInfo) {
     // TODO: Maybe just point to this file (compression.js) and detect if worker scope on load (to avoid duplicate vars below)
     var code = `
-        const CompressionUrlBase = '${window.location.origin}/${CompressionUrlBase}';
+        const CompressionUrlBase = '${window.location.origin}${window.location.pathname}${CompressionUrlBase}';
         const CompressionType_None = ${CompressionType_None};
         const CompressionType_Brotli = ${CompressionType_Brotli};
         const CompressionType_GZip = ${CompressionType_GZip};
