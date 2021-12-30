@@ -24,7 +24,6 @@ var WebcsInterop = {
         'webcs.exe',
         //'System.Private.Xml.dll', 'System.Xml.dll',
     ],
-    hasCompressedFiles: false,
     disablePreLoad: true,// If false load .NET runtime on page load. If true load it when requested (terminal command)
     fullLoaderUsePrompt: false,// If true prompt (y/n in terminal) when fetching full .NET runtime
     fullLoaderUseSimpleProgressBar: false,// If true output a simple loading progress bar when fetching full .NET runtime
@@ -167,116 +166,109 @@ var WebcsInterop = {
         };
         if (fileInfos.length == 0) {
             callback(loadFilesResponse);
+            return;
         }
-        for (var i = 0; i < fileInfos.length; i++) {
-            let fileInfo = fileInfos[i];
-            if (fileInfo.isLoaded) {
-                onPendingRequestComplete(fileInfo, true);
-                continue;
-            }
-            let url = this.mountPointUrl + fileInfo.path;
-            if (this.logFileLoads) {
-                console.log('Attempting to fetch %s', url);
-            }
-            let handleFileData = (bytes) => {
-                let loadSuccess = true;
-                try {
-                    var offset = null;
-                    switch (fileInfo.behavior) {
-                        case WCS_FILE_BEHAVIOR_ASSEMBLY:
-                        case WCS_FILE_BEHAVIOR_PDB:
-                            // mono_wasm_add_assembly handles assemblies and pdbs
-                            offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
-                            // /sdk/ is currently required if compiling with mcs.exe
-                            try {
-                                FS.mkdir('/sdk/');
-                            } catch{}
-                            FS.writeFile('/sdk/' + fileInfo.name, bytes);
-                            fileInfo.offset = offset;
-                            fileInfo.size = bytes.length;
-                            let hasPdb = MONO.mono_wasm_add_assembly(fileInfo.name, offset, bytes.length);
-                            if (hasPdb) {
-                                this.tryPushLoadedFile(fileInfo, url);
-                            }
-                            break;
-                        case WCS_FILE_BEHAVIOR_ICU:
-                            offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
-                            if (!MONO.mono_wasm_load_icu_data(offset)) {
-                                console.error('WebcsInterop: Error loading ICU asset %s', url);
-                            }
-                            break;
-                    }
-                    fileInfo.isLoaded = true;
-                } catch (exc) {
-                    loadSuccess = false;
-                    console.error('WebcsInterop: Unhandled exception processing fetch data\n%s', exc);
-                    throw exc;
-                } finally {
-                    onPendingRequestComplete(fileInfo, loadSuccess);
+        var doFetches = () => {
+            for (var i = 0; i < fileInfos.length; i++) {
+                let fileInfo = fileInfos[i];
+                if (fileInfo.isLoaded) {
+                    onPendingRequestComplete(fileInfo, true);
+                    continue;
                 }
-            };
-            try {
-                fetch(url, {credentials: 'same-origin'}).then((response) => {
-                    if (response.ok) {
-                        response.arrayBuffer().then((arrayBuffer) => {
-                            var buffer = new Uint8Array(arrayBuffer);
-                            switch (fileInfo.compressionType) {
-                                case CompressionType_Brotli:
-                                case CompressionType_GZip:
-                                    // NOTE: Both of these are pretty bad (impacts the loading experience and causes RAM issues)
-                                    let libLoadedCallback = (instance) => {
-                                        switch (fileInfo.compressionType) {
-                                            case CompressionType_Brotli:
-                                                // A crappy attempt at reducing the negative impacts of the sync code (I don't think this works due to all of the asynced fetches)
-                                                setTimeout(() => {
-                                                    try {
-                                                        let dat = instance.decode(buffer);
-                                                        setTimeout(() => {
-                                                            handleFileData(dat);
-                                                        }, 1);
-                                                    } catch (exc) {
-                                                        console.error('WebcsInterop: Error doing brotli decode %s\n%s', url, exc);
-                                                        onPendingRequestComplete(fileInfo, false);                                                        
-                                                    }
-                                                }, 1);
-                                                break;
-                                            case CompressionType_GZip:
-                                                instance.decompress(buffer, (err, data) => {
-                                                    if (err) {
-                                                        console.error('WebcsInterop: Error doing gzip decode %s\n%s', url, err);
-                                                        onPendingRequestComplete(fileInfo, false);
-                                                    } else {
-                                                        handleFileData(data);
-                                                    }
-                                                });
-                                                break;
-                                            default:
-                                                console.error('WebcsInterop: This should not happen');
-                                                onPendingRequestComplete(fileInfo, false);
-                                                break;
+                let url = this.mountPointUrl + fileInfo.path;
+                if (this.logFileLoads) {
+                    console.log('Attempting to fetch %s', url);
+                }
+                let handleFileData = (bytes) => {
+                    let loadSuccess = true;
+                    try {
+                        var offset = null;
+                        switch (fileInfo.behavior) {
+                            case WCS_FILE_BEHAVIOR_ASSEMBLY:
+                            case WCS_FILE_BEHAVIOR_PDB:
+                                // mono_wasm_add_assembly handles assemblies and pdbs
+                                offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
+                                // /sdk/ is currently required if compiling with mcs.exe
+                                try {
+                                    FS.mkdir('/sdk/');
+                                } catch{}
+                                FS.writeFile('/sdk/' + fileInfo.name, bytes);
+                                fileInfo.offset = offset;
+                                fileInfo.size = bytes.length;
+                                let hasPdb = MONO.mono_wasm_add_assembly(fileInfo.name, offset, bytes.length);
+                                if (hasPdb) {
+                                    this.tryPushLoadedFile(fileInfo, url);
+                                }
+                                break;
+                            case WCS_FILE_BEHAVIOR_ICU:
+                                offset = MONO.mono_wasm_load_bytes_into_heap(bytes);
+                                if (!MONO.mono_wasm_load_icu_data(offset)) {
+                                    console.error('WebcsInterop: Error loading ICU asset %s', url);
+                                }
+                                break;
+                        }
+                        fileInfo.isLoaded = true;
+                    } catch (exc) {
+                        loadSuccess = false;
+                        console.error('WebcsInterop: Unhandled exception processing fetch data\n%s', exc);
+                        throw exc;
+                    } finally {
+                        onPendingRequestComplete(fileInfo, loadSuccess);
+                    }
+                };
+                try {
+                    fetch(url, {credentials: 'same-origin'}).then((response) => {
+                        if (response.ok) {
+                            response.arrayBuffer().then((arrayBuffer) => {
+                                let buffer = new Uint8Array(arrayBuffer);
+                                if (fileInfo.compressionType != CompressionType_None) {
+                                    let onDecompressResponse = (err, decompressedBuffer) => {
+                                        if (err) {
+                                            console.error('WebcsInterop: Error doing decode %s\n%s', url, err);
+                                            onPendingRequestComplete(fileInfo, false);
+                                        } else {
+                                            handleFileData(decompressedBuffer);
                                         }
                                     };
-                                    if (!getLibForDecompress(fileInfo.compressionType, libLoadedCallback)) {
-                                        console.error('WebcsInterop: Failed to get decompress lib for %s\n%s', url);
-                                        onPendingRequestComplete(fileInfo, false);
-                                    }
-                                    break;
-                                default:
+                                    compressionWorkerDecompress(fileInfo.compressionType, buffer, onDecompressResponse);
+                                } else {
                                     handleFileData(buffer);
-                                    break;
-                            }
-                        }).catch(exc => {
-                            console.error('WebcsInterop: Error handling fetch response %s\n%s', url, exc);
+                                }
+                            }).catch(exc => {
+                                console.error('WebcsInterop: Error handling fetch response %s\n%s', url, exc);
+                                onPendingRequestComplete(fileInfo, false);
+                            });
+                        } else {
                             onPendingRequestComplete(fileInfo, false);
-                        });
-                    } else {
-                        onPendingRequestComplete(fileInfo, false);
-                    }
-                });
-            } catch (exc) {
-                console.error('WebcsInterop: Error fetching %s\n%s', url, exc);
-                onPendingRequestComplete(fileInfo, false);
+                        }
+                    });
+                } catch (exc) {
+                    console.error('WebcsInterop: Error fetching %s\n%s', url, exc);
+                    onPendingRequestComplete(fileInfo, false);
+                }
             }
+        };
+        var compressionLibsToLoad = new Set();
+        for (var i = 0; i < fileInfos.length; i++) {
+            let fileInfo = fileInfos[i];
+            if (fileInfo.compressionType != CompressionType_None) {
+                compressionLibsToLoad.add(fileInfo.compressionType);
+            }
+        }
+        if (compressionLibsToLoad.size > 0) {
+            var compressionLibsLoaded = 0;
+            var compressionLibLoadedCallback = () => {
+                if (++compressionLibsLoaded == compressionLibsToLoad.size) {
+                    doFetches();
+                }
+            };
+            for (var i = 0; i < compressionLibsToLoad.size; i++) {
+                for (let compressionType of compressionLibsToLoad) {
+                    compressionWorkerLoad(compressionType, compressionLibLoadedCallback);
+                }
+            }
+        } else {
+            doFetches();
         }
     },
     // For both bind/call you can provide your own signature or leave it undefined for it to determine it from the C# function signature via mono_method_get_call_signature
@@ -352,7 +344,6 @@ var WebcsInterop = {
                             if (compressionInfo.type != CompressionType_None) {
                                 itemName = compressionInfo.nameWithoutExtension;
                                 fileInfo.compressionType = compressionInfo.type;
-                                this.hasCompressedFiles = true;
                             }
                             if (j == filePathSplitted.length - 1) {
                                 // Last path entry should be the file

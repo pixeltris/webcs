@@ -17,21 +17,6 @@ Tests (useful reference code)
 - Some mixed interop tests [here](https://github.com/dotnet/runtime/blob/69b5d67d9418d672609aa6e2c418a3d4ae00ad18/src/libraries/System.Private.Runtime.InteropServices.JavaScript/tests/System/Runtime/InteropServices/JavaScript/MarshalTests.cs#L323-L325) / [here](https://github.com/dotnet/runtime/blob/69b5d67d9418d672609aa6e2c418a3d4ae00ad18/src/libraries/System.Private.Runtime.InteropServices.JavaScript/tests/System/Runtime/InteropServices/JavaScript/HelperMarshal.cs) / [here](https://github.com/dotnet/runtime/blob/69b5d67d9418d672609aa6e2c418a3d4ae00ad18/src/mono/wasm/test-main.js#L223).
 - Tests of `System.Private.Runtime.InteropServices.JavaScript` [here](https://github.com/dotnet/runtime/blob/69b5d67d9418d672609aa6e2c418a3d4ae00ad18/src/libraries/System.Private.Runtime.InteropServices.JavaScript/tests/System/Runtime/InteropServices/JavaScript/JavaScriptTests.cs).
 
-## Updating mono for webcs
-- [Download the latest mono wasm build](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/)
-- Navigate to `/runtimes/browser-wasm/native/`
-- Copy `dotnet.wasm`, `dotnet.js` to `/mono/`
-- Copy `icudt` files to `/mono/managed/icu/`
-- Copy `System.Private.CoreLib.dll` to `/mono/managed/sdk/`
-- Copy everything from `/runtimes/browser-wasm/lib/netXXX/` to `/mono/managed/sdk/`
-- Bump the version number in `index.html`
-- Update the assembly / file size list below for "Hello world" (optional)
-
-*See `Compression` below.*
-
-TODO: Find out difference between [this](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/) runtime (which is being used) and [this](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.browser-wasm/) runtime  
-NOTE: There seem to be issues with both roslyn / mcs under `Microsoft.NETCore.App.Runtime.browser-wasm` 5.0.13
-
 ## Minimum assemblies for "Hello world"
 - System.Private.CoreLib.dll (3.29 MB)
 - mscorlib.dll (56.1 KB)
@@ -43,6 +28,21 @@ NOTE: There seem to be issues with both roslyn / mcs under `Microsoft.NETCore.Ap
 - System.Runtime.InteropServices.dll (37.1 KB)
 - System.Private.Runtime.InteropServices.JavaScript.dll (48.1 KB)
 
+## Updating mono for webcs
+- [Download the latest mono wasm build](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/)
+- Navigate to `/runtimes/browser-wasm/native/`
+- Copy `dotnet.wasm`, `dotnet.js` to `/mono/`
+- Copy `icudt` files to `/mono/managed/icu/`
+- Copy `System.Private.CoreLib.dll` to `/mono/managed/sdk/`
+- Copy everything from `/runtimes/browser-wasm/lib/netXXX/` to `/mono/managed/sdk/`
+- Bump the version number in `index.html`
+- Update the assembly / file size list for "Hello world" (optional)
+
+*See `Compression` below.*
+
+TODO: Find out difference between [this](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.Mono.browser-wasm/) runtime (which is being used) and [this](https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.browser-wasm/) runtime  
+NOTE: There seem to be issues with both roslyn / mcs under `Microsoft.NETCore.App.Runtime.browser-wasm` 5.0.13
+
 ## Updating roslyn
 - Download the latest build from [here](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp) and [here](https://www.nuget.org/packages/Microsoft.CodeAnalysis.Common)
 - Copy the desired dlls into `/mono/managed/bin/roslyn/`
@@ -52,6 +52,8 @@ NOTE: There seem to be issues with both roslyn / mcs under `Microsoft.NETCore.Ap
 
 ## Updating mcs
 - See `WebcsCompilerMcs` [webcs.cs](/mono/managed/bin/webcs/webcs.cs)
+
+*See `Compression` below.*
 
 ## /mono/dotnet-extra.js
 - The mono runtime is loaded in here (as opposed to `mono_load_runtime_and_bcl`). `/mono/managed/files.json` lists all known files in `/mono/managed/` which allows it to find files on the static web server.
@@ -71,27 +73,31 @@ Sample code. These can be fetched via `dotnet samples`.
 
 ## Compression
 
-Compression is optional but it's used for the files found in this repo as it's hosted on GitHub Pages which doesn't gzip the files by default. If you're self hosting it'll be more efficient to use content encoding compression.
+### Compress
+
+Compression is optional. It's used in this repo as it's hosted on GitHub Pages which doesn't gzip assemblies by default. If you're self hosting it'll be more efficient to use content encoding compression.
 
 ```
-mkdir cmp
-cd cmp
-fs in <--- create managed.zip by zipping the managed folder and select it
+mkdir comp
+cd comp
+fs in <--- zip the managed folder into managed.zip and then select it
 unzip managed.zip
 compress -brotli -r managed -l:9
 fs out out/managed
 ```
 
-gzip alternative: `compress -gzip -r managed -l:9`
+For gzip use: `compress -gzip -r managed -l:9`
 
-At this point you want to copy the files you want and delete the originals. You'll also want to re-run genfiles.exe
+Copy over the files you want, delete the non-compressed equivalents, and then re-run genfiles.exe
 
-Getting original files back:
+### Decompress
+
+The following can be used to get the original files back:
 
 ```
-mkdir uncmp
-cd uncmp
-fs in <--- create managed.zip by zipping the managed folder and select it
+mkdir uncomp
+cd uncomp
+fs in <--- zip the managed folder into managed.zip and then select it
 unzip managed.zip
 compress -d -r managed
 fs out out/managed

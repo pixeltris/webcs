@@ -1375,7 +1375,7 @@ class TerminalCommand_dotnet extends TerminalCommand {
         this.process.controller.term.writeln('Run `dotnet load`');
     }
     loadDotNet(fileInfosToLoad, loadQuiet, totalSize) {
-        if (fileInfosToLoad.length > 0 && !loadQuiet && WebcsInterop.hasCompressedFiles && !WebcsInterop.fullLoaderUsePrompt) {
+        if (fileInfosToLoad.length > 0 && !loadQuiet && !WebcsInterop.fullLoaderUsePrompt) {
             this.process.controller.term.writeln('Fetching ' + bytesToSize(totalSize, 1) + '...');
         }
         WebcsInterop.loadFiles(fileInfosToLoad, (response) => {
@@ -1403,7 +1403,8 @@ class TerminalCommand_dotnet extends TerminalCommand {
                 if (WebcsInterop.fullLoaderUseSimpleProgressBar) {
                     this.process.controller.term.write('.');
                 } else {
-                    this.process.controller.term.writeln(stepFileInfo.path);
+                    let originalPath = getCompressionOriginalPath(stepFileInfo.path);
+                    this.process.controller.term.writeln(originalPath);
                 }
             }
         });
@@ -2896,7 +2897,6 @@ class TerminalCommand_compress extends TerminalCommand {
                                                 case CompressionType_Brotli:
                                                     //decompressedData = new Uint8Array(libInstance.decompressArray(data));//brotli.js
                                                     decompressedData = libInstance.decode(data);//brotli-decode.min.js
-                                                    debugger;
                                                     break;
                                                 case CompressionType_GZip:
                                                     decompressedData = libInstance.decompressSync(data);
