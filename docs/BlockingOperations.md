@@ -36,6 +36,23 @@ Same as "Example 2", but in this case it uses importScripts as the synchronous/b
 runno implementation:
 - https://github.com/taybenlor/runno/commit/6e8787d700eb63d9a398ce55320786030c000dbb#diff-d1c3adcc970285fbef19c9b5db5f81b430609cfa67ab76d120b3eba9e0c30106
 
+### Example 4 (an exact implementation)
+
+This is an implementation of Console.ReadLine in the exact way that we're after (using similar techniques to the ones above)
+
+- https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/WasmCSharpEditor/wwwroot/service-worker.js#L8-L9
+  - This hooks `fetch` in the main thread
+- https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/JSWrapper/wwwroot/js/OnFetchHandler.js#L3
+  - `IsSpecial` returns true when the fetched url is `_content/JSWrapper/Dummy.html` (which doesn't exist)
+- https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/JSWrapper/wwwroot/js/OnFetchHandler.js#L15
+  - `GetSpecialResponse` is called on the dummy request. The "action" defines what should happen. In this case it's "GetInput" which is the given handler name for Console.ReadLine
+  - This function will keep doing a `setTimout` call until user input has been provided
+- https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/WasmCSharpEditor/Components/VirtualConsole.razor#L99
+  - A little unintuitive, but this is a blazor handler for the user input which then uses `SendMessage` which calls [this](https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/JSWrapper/wwwroot/js/UIMessageSender.js#L1) which does a `postMessage` and is finally picked up by the above "special" fetch code which is waiting on the message.
+- `Console.SetIn` is called to redirect input to this https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/CSharpCompiler/IO/WorkerTextReader.cs
+- `ConsoleWorkerReader.ReadInput` is called by the above input redirector https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/JSWrapper/WorkerSyncConnection/WorkerConsoleReader.cs#L19
+- `GetInput` in the js side does a synchronous XMLHttpRequest to the dummy url mentioned above and blocks any further C# code execution until the hooked `fetch` function returns a value (when the user provides input) https://github.com/2427dkusiro/WasmCSharpEditor/blob/2474c572b7b181e38e6933fc8bbd215861437be4/src/JSWrapper/wwwroot/js/WorkerConsoleReader.js
+
 ### Related
 
 - FS.createLazyFile (library_fs.js) supports blocking file loading on worker threads via a sync XMLHttpRequest call
